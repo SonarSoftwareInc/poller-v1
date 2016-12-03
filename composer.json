@@ -1,0 +1,19 @@
+{
+    "name": "sonarsoftware/poller",
+    "description": "The Sonar poller.",
+    "keywords": ["sonar","sonar software","sonar api","sonar software api","sonar poller"],
+    "homepage": "https://sonar.software",
+    "license": "MIT",
+    "require": {
+        "league/climate": "^3.2",
+        "guzzlehttp/guzzle": "^6.2",
+        "codeception/codeception": "^2.2",
+        "chrisboulton/php-resque": "^1.2",
+        "vlucas/phpdotenv": "^2.4"
+    },
+    "autoload": {
+        "psr-4" : {
+            "SonarSoftware\\Poller\\" : "src"
+        }
+    }
+}

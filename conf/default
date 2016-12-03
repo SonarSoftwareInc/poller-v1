@@ -1,0 +1,6 @@
+check process defaultQueue with pidfile /home/sonarpoller/sonar_defaultQueue.pid
+start program = "/usr/bin/nice /opt/poller/bin/defaultQueue.sh"
+    as uid sonarpoller and gid sonarpoller
+stop program = "/bin/bash -c '/bin/kill -9 `/bin/cat /home/sonarpoller/sonar_defaultQueue.pid`'"
+mode active
+GROUP queues
