@@ -109,7 +109,7 @@ class Poller
                     ];
 
                     $templateDetails = $work['templates'][$host['template_id']];
-                    
+
                     if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
                     {
                         continue;
@@ -205,11 +205,6 @@ class Poller
 
         switch ($exception->getCode())
         {
-            case 0:
-            case 2:
-            case 4:
-                $return['status'] = $this::DOWN;
-                break;
             case 8:
             case 16:
             case 32:
