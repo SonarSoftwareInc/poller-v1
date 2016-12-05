@@ -109,9 +109,7 @@ class Poller
                     ];
 
                     $templateDetails = $work['templates'][$host['template_id']];
-
-                    var_export($templateDetails,true);
-
+                    
                     if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
                     {
                         continue;
