@@ -25,7 +25,7 @@ If you are using another distribution, you will need the following packages:
 * redis-server
 * monit
 
-Once the packages are installed, download the poller from this repository by executing `https://github.com/SonarSoftware/poller/archive/master.zip`, unzip it by typing `unzip master.zip`, and run `sudo php install.php`
+Once the packages are installed, download the poller from this repository by executing `wget https://github.com/SonarSoftware/poller/archive/master.zip`, unzip it by typing `unzip master.zip`, and run `sudo php install.php`
 
 Navigate to your Sonar instance, go to Network > Monitoring > Pollers, and add a new entry for this poller. Select all the subnets you wish this poller to poll. After it is added, copy the API key shown in the poller list - you'll need it in a second.
 
