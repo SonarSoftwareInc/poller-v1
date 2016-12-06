@@ -25,10 +25,14 @@ If you are using another distribution, you will need the following packages:
 * redis-server
 * monit
 
-Once the packages are installed, download the poller from this repository by executing `wget https://github.com/SonarSoftware/poller/archive/master.zip`, unzip it by typing `unzip master.zip`, and run `sudo php install.php`
+Once the packages are installed, clone the poller from this repository by typing `git clone https://github.com/SonarSoftware/poller.git`, followed by `cd poller` and then `sudo php install.php`.
 
-Navigate to your Sonar instance, go to Network > Monitoring > Pollers, and add a new entry for this poller. Select all the subnets you wish this poller to poll. After it is added, copy the API key shown in the poller list - you'll need it in a second.
+Once the install is complete, navigate to your Sonar instance, go to Network > Monitoring > Pollers, and add a new entry for this poller. Select all the subnets you wish this poller to poll. After it is added, copy the API key shown in the poller list - you'll need it in a second.
 
 Once the installer is finished, type `cp /opt/poller/.env.example /opt/poller/.env` and then `nano -w /opt/poller/.env`. Modify the `SONAR_URI` value to be the full path to your Sonar instance, including https://. Modify the `API_KEY` value to be the API key you copied from Sonar a moment ago.
 
 Press `CTRL+X` to exit nano, and save the changes you made.
+
+## Upgrading
+
+You can upgrade by updating the repository and checking out the tag you wish to update to. You can also simplify this by using the `checkForUpgrades` script. To run this, type `sudo php /opt/poller/bin/checkForUpgrades.php`. You should do this fairly regularly to ensure your poller is up to date.
