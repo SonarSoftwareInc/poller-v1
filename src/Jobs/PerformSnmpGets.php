@@ -17,7 +17,12 @@ class PerformSnmpGets
         $dotenv->load();
 
         $poller = new Poller();
+
+        $startTime = time();
+
         $results = $poller->snmp($this->args);
+
+        $timeTaken = time() - $startTime;
 
         $client = new Client();
         $result = $client->post(getenv("SONAR_URI") . "/api/poller/snmp_gets", [
@@ -29,6 +34,7 @@ class PerformSnmpGets
                 'results' => $results,
                 'api_key' => getenv("API_KEY"),
                 'version' => trim(file_get_contents(dirname(__FILE__) . "/../../resources/version")),
+                'time' => $timeTaken,
             ]
         ]);
 

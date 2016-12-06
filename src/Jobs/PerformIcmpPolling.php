@@ -21,7 +21,12 @@ class PerformIcmpPolling
         $dotenv->load();
 
         $poller = new Poller();
+
+        $startTime = time();
+
         $results = $poller->ping($this->args);
+
+        $timeTaken = time() - $startTime;
 
         $client = new Client();
         $result = $client->post(getenv("SONAR_URI") . "/api/poller/icmp", [
@@ -33,6 +38,7 @@ class PerformIcmpPolling
                 'results' => $results,
                 'api_key' => getenv("API_KEY"),
                 'version' => trim(file_get_contents(dirname(__FILE__) . "/../../resources/version")),
+                'time' => $timeTaken,
             ]
         ]);
 
