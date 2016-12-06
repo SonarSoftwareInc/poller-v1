@@ -33,6 +33,10 @@ Once the installer is finished, type `cp /opt/poller/.env.example /opt/poller/.e
 
 Press `CTRL+X` to exit nano, and save the changes you made.
 
+## Testing
+
+You can test the pollers ability to obtain and deliver work by typing `php /opt/poller/bin/getWork.php`. If something is misconfigured, you will receive a message with details about the problem. If you see `Obtained work from Sonar, queueing..` then everything is configured correctly.
+
 ## Upgrading
 
 You can upgrade by updating the repository and checking out the tag you wish to update to. You can also simplify this by using the `checkForUpgrades` script. To run this, type `sudo php /opt/poller/bin/checkForUpgrades.php`. You should do this fairly regularly to ensure your poller is up to date.
