@@ -2,6 +2,7 @@
 
 namespace SonarSoftware\Poller\Pollers;
 
+use Dotenv\Dotenv;
 use Exception;
 use RuntimeException;
 use SNMP;
@@ -17,6 +18,14 @@ class Poller
     const GOOD = 2;
     const WARNING = 1;
     const DOWN = 0;
+
+    public function __construct()
+    {
+        $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
+        $dotenv->load();
+        $this->icmpForks = (int)getenv("ICMP_FORKS");
+        $this->snmpForks = (int)getenv("SNMP_FORKS");
+    }
 
     /**
      * Ping an array of IPv4/IPv6 hosts
