@@ -25,7 +25,10 @@ $climate->lightGreen("OK!");
 
 $climate->white("Installing to /opt/poller... ");
 try {
-    execCommand("/bin/mkdir /opt/poller");
+    if (!file_exists("/opt/poller"))
+    {
+        execCommand("/bin/mkdir /opt/poller");
+    }
     execCommand("/bin/cp -R " . dirname(__FILE__) ."/* /opt/poller/");
     execCommand("/bin/chown -R sonarpoller:sonarpoller /opt/poller/");
 }
@@ -50,10 +53,11 @@ $climate->lightGreen("OK!");
 
 $climate->white("Configuring queue listeners... ");
 try {
+    execCommand("/bin/sed -i 's/^ #set httpd port 2812 and/set httpd port 2812 and/g' /etc/monit/monitrc");
     execCommand("/bin/sed -i 's/^#set httpd port 2812 and/set httpd port 2812 and/g' /etc/monit/monitrc");
     execCommand("/bin/sed -i 's/^#     use address localhost/     use address localhost/g' /etc/monit/monitrc");
     execCommand("/bin/sed -i 's/^#     allow localhost/     allow localhost/g' /etc/monit/monitrc");
-    execCommand("/usr/sbin/service monit restart");
+    execCommand("/usr/sbin/service monit reload");
     execCommand("/bin/cp " . dirname(__FILE__) . "/conf/default /etc/monit/conf.d");
     execCommand("/usr/bin/monit start defaultQueue");
 }
