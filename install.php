@@ -55,6 +55,8 @@ $climate->white("Configuring queue listeners... ");
 try {
     execCommand("/bin/sed -i 's/^ #set httpd port 2812 and/set httpd port 2812 and/g' /etc/monit/monitrc");
     execCommand("/bin/sed -i 's/^#set httpd port 2812 and/set httpd port 2812 and/g' /etc/monit/monitrc");
+    execCommand("/bin/sed -i 's/^# set httpd port 2812 and/set httpd port 2812 and/g' /etc/monit/monitrc");
+    execCommand("/bin/sed -i 's/^ # set httpd port 2812 and/set httpd port 2812 and/g' /etc/monit/monitrc");
     execCommand("/bin/sed -i 's/^#     use address localhost/     use address localhost/g' /etc/monit/monitrc");
     execCommand("/bin/sed -i 's/^#     allow localhost/     allow localhost/g' /etc/monit/monitrc");
     execCommand("/usr/sbin/service monit reload");
