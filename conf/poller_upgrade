@@ -1,1 +1,2 @@
 01 01 * * * sonarpoller /usr/bin/php /opt/poller/bin/checkForUpgrades.php > /dev/null 2>&1
+#Keep a newline here
