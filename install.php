@@ -81,6 +81,18 @@ catch (RuntimeException $e)
 }
 $climate->lightGreen("OK!");
 
+$climate->white("Setting up log file... ");
+try {
+    execCommand("/usr/bin/touch /var/log/sonar_poller.log");
+    execCommand("/bin/chown sonarpoller:sonarpoller /var/log/sonar_poller.log");
+}
+catch (RuntimeException $e)
+{
+    $climate->shout("FAILED!");
+    return;
+}
+$climate->lightGreen("OK!");
+
 /**
  * @param $command
  * @return mixed

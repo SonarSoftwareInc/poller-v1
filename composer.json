@@ -9,7 +9,9 @@
         "guzzlehttp/guzzle": "^6.2",
         "codeception/codeception": "^2.2",
         "chrisboulton/php-resque": "^1.2",
-        "vlucas/phpdotenv": "^2.4"
+        "vlucas/phpdotenv": "^2.4",
+        "monolog/monolog": "^1.22",
+        "nesbot/carbon": "^1.21"
     },
     "autoload": {
         "psr-4" : {
