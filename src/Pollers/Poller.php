@@ -11,8 +11,8 @@ use SonarSoftware\Poller\Formatters\Formatter;
 
 class Poller
 {
-    private $icmpForks = 150;
-    private $snmpForks = 150;
+    private $icmpForks = 10;
+    private $snmpForks = 25;
 
     /** Status constants */
     const GOOD = 2;
@@ -23,8 +23,8 @@ class Poller
     {
         $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
         $dotenv->load();
-        $this->icmpForks = (int)getenv("ICMP_FORKS");
-        $this->snmpForks = (int)getenv("SNMP_FORKS");
+        $this->icmpForks = (int)getenv("ICMP_FORKS") > 0 ? (int)getenv("ICMP_FORKS") : 10;
+        $this->snmpForks = (int)getenv("SNMP_FORKS") > 0 ? (int)getenv("SNMP_FORKS") : 25;
     }
 
     /**
