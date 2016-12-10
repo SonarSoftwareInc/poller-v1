@@ -3,6 +3,7 @@
 namespace SonarSoftware\Poller\Services;
 
 use Carbon\Carbon;
+use InvalidArgumentException;
 use Monolog\Logger;
 
 class SonarLogger
