@@ -6,7 +6,7 @@ use Dotenv\Dotenv;
 use Exception;
 use GuzzleHttp\Client;
 use Monolog\Logger;
-use SonarSoftware\Poller\Pollers\Poller;
+use SonarSoftware\Poller\Pollers\IcmpPoller;
 use SonarSoftware\Poller\Services\SonarLogger;
 
 class PerformIcmpPolling
@@ -31,12 +31,12 @@ class PerformIcmpPolling
             $logger->log("Starting ICMP polling cycle.",Logger::INFO);
         }
 
-        $poller = new Poller();
+        $poller = new IcmpPoller();
 
         $startTime = time();
 
         try {
-            $results = $poller->ping($this->args);
+            $results = $poller->poll($this->args);
         }
         catch (Exception $e)
         {

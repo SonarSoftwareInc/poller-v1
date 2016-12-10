@@ -6,7 +6,7 @@ use Dotenv\Dotenv;
 use Exception;
 use GuzzleHttp\Client;
 use Monolog\Logger;
-use SonarSoftware\Poller\Pollers\Poller;
+use SonarSoftware\Poller\Pollers\SnmpPoller;
 use SonarSoftware\Poller\Services\SonarLogger;
 
 class PerformSnmpGets
@@ -30,12 +30,12 @@ class PerformSnmpGets
             $logger->log("Starting SNMP polling cycle.",Logger::INFO);
         }
 
-        $poller = new Poller();
+        $poller = new SnmpPoller();
 
         $startTime = time();
 
         try {
-            $results = $poller->snmp($this->args);
+            $results = $poller->poll($this->args);
         }
         catch (Exception $e)
         {
