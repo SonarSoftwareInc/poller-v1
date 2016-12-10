@@ -3,6 +3,7 @@
 namespace SonarSoftware\Poller\Pollers;
 
 use Dotenv\Dotenv;
+use Monolog\Logger;
 use SNMP;
 use SNMPException;
 use SonarSoftware\Poller\Formatters\Formatter;
@@ -41,16 +42,16 @@ class SnmpPoller
         $chunks = array_chunk($work['hosts'],ceil(count($work['hosts'])/$this->snmpForks));
 
         $results = [];
-        $socketHolder = [];
+
+        $fileUniquePrefix = uniqid(true);
 
         for ($i = 0; $i < count($chunks); $i++)
         {
-            socket_create_pair(AF_UNIX, SOCK_STREAM, 0, $sockets);
-            $socketHolder[$i] = $sockets;
             $pid = pcntl_fork();
             if (!$pid)
             {
-                socket_close($sockets[1]);
+                $handle = fopen("/tmp/$fileUniquePrefix" . "_sonar_$i","w");
+
                 foreach ($chunks[$i] as $host)
                 {
                     $resultToWrite[$host['ip']] = [
@@ -123,10 +124,10 @@ class SnmpPoller
                         }
                     }
 
-                    socket_write($sockets[0], serialize($resultToWrite));
+                    fwrite($handle, json_encode($resultToWrite));
+                    fclose($handle);
                 }
 
-                socket_close($sockets[0]);
                 exit($i);
             }
         }
@@ -134,10 +135,7 @@ class SnmpPoller
         while (pcntl_waitpid(0, $status) != -1)
         {
             $status = pcntl_wexitstatus($status);
-            $singleSocket = $socketHolder[$status];
-            socket_close($singleSocket[0]);
-            $output = unserialize(socket_read($singleSocket[1],100000000));
-            socket_close($singleSocket[1]);
+            $output = json_decode(file_get_contents("/tmp/$fileUniquePrefix" . "_sonar_$status"),true);
             if (is_array($output))
             {
                 $results = array_merge($results,$output);
