@@ -87,7 +87,7 @@ class SnmpPoller
 
                     //Regular GETs (this will bulk GET multiple OIDs)
                     $snmp = new SNMP($version, $host['ip'], $templateDetails['snmp_community'], 2000000, 0);
-                    $snmp->valueretrieval = SNMP_VALUE_OBJECT | SNMP_VALUE_PLAIN;
+                    $snmp->valueretrieval = SNMP_VALUE_LIBRARY;
                     $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
                     $snmp->enum_print = true;
                     $snmp->exceptions_enabled = SNMP::ERRNO_ANY;
@@ -113,7 +113,6 @@ class SnmpPoller
                     if ($templateDetails['collect_interface_statistics'] == true)
                     {
                         try {
-                            $snmp->valueretrieval = SNMP_VALUE_PLAIN;
                             $result = $snmp->walk("1.3.6.1.2.1.2.2.1");
                             $resultToWrite[$host['ip']]['results']['interfaces'] = json_decode(json_encode($result),true);
                         }
