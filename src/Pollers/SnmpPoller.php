@@ -4,6 +4,7 @@ namespace SonarSoftware\Poller\Pollers;
 
 use Dotenv\Dotenv;
 use Monolog\Logger;
+use RuntimeException;
 use SNMP;
 use SNMPException;
 use SonarSoftware\Poller\Formatters\Formatter;
@@ -50,8 +51,6 @@ class SnmpPoller
             $pid = pcntl_fork();
             if (!$pid)
             {
-                $handle = fopen("/tmp/$fileUniquePrefix" . "_sonar_$i","w");
-
                 foreach ($chunks[$i] as $host)
                 {
                     $resultToWrite[$host['ip']] = [
@@ -124,6 +123,13 @@ class SnmpPoller
                         }
                     }
 
+                    $handle = fopen("/tmp/$fileUniquePrefix" . "_sonar_$i","w");
+                    if ($handle === false)
+                    {
+                        $this->log->log("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$i",Logger::ERROR);
+                        throw new RuntimeException("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$i");
+                    }
+
                     fwrite($handle, json_encode($resultToWrite));
                     fclose($handle);
                 }
@@ -144,6 +150,8 @@ class SnmpPoller
             {
                 $this->log->log("When unserializing SNMP data, no array was returned as a result of unserialization.",Logger::ERROR);
             }
+
+            unlink("/tmp/$fileUniquePrefix" . "_sonar_$status");
         }
 
         $formatter = new Formatter();
