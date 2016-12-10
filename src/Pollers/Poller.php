@@ -4,15 +4,18 @@ namespace SonarSoftware\Poller\Pollers;
 
 use Dotenv\Dotenv;
 use Exception;
+use Monolog\Logger;
 use RuntimeException;
 use SNMP;
 use SNMPException;
 use SonarSoftware\Poller\Formatters\Formatter;
+use SonarSoftware\Poller\Services\SonarLogger;
 
 class Poller
 {
-    private $icmpForks = 10;
-    private $snmpForks = 25;
+    protected $icmpForks;
+    protected $snmpForks;
+    protected $log;
 
     /** Status constants */
     const GOOD = 2;
@@ -25,6 +28,7 @@ class Poller
         $dotenv->load();
         $this->icmpForks = (int)getenv("ICMP_FORKS") > 0 ? (int)getenv("ICMP_FORKS") : 10;
         $this->snmpForks = (int)getenv("SNMP_FORKS") > 0 ? (int)getenv("SNMP_FORKS") : 25;
+        $this->log = new SonarLogger();
     }
 
     /**
@@ -71,6 +75,10 @@ class Poller
             if (is_array($output))
             {
                 $results = array_merge($results,$output);
+            }
+            else
+            {
+                $this->log->log("When unserializing ICMP data, no array was returned as a result of unserialization.",Logger::ERROR);
             }
         }
 
@@ -193,6 +201,10 @@ class Poller
             if (is_array($output))
             {
                 $results = array_merge($results,$output);
+            }
+            else
+            {
+                $this->log->log("When unserializing SNMP data, no array was returned as a result of unserialization.",Logger::ERROR);
             }
         }
 
