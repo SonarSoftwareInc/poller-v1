@@ -1,1 +1,2 @@
 * * * * * sonarpoller /usr/bin/php /opt/poller/bin/getWork.php > /dev/null 2>&1
+#Keep a line here

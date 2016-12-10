@@ -41,4 +41,4 @@ You can test the pollers ability to obtain and deliver work by typing `php /opt/
 
 You can upgrade by updating the repository and checking out the tag you wish to update to. You can also simplify this by using the `checkForUpgrades` script. To run this, type `sudo php /opt/poller/bin/checkForUpgrades.php`. You should do this fairly regularly to ensure your poller is up to date.
 
-You can also automate updates by adding this file to cron. To do this, copy the automatic cron file by typing <code>sudo cp conf/poller_upgrade /etc/cron.d</code>. This will force the system to check for poller updates every morning, and update if any are available.
+You can also automate updates by adding this file to cron. To do this, copy the automatic cron file by typing <code>sudo cp poller_upgrade /etc/cron.d</code>. This will force the system to check for poller updates every morning, and update if any are available.
