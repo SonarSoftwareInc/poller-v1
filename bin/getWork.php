@@ -6,11 +6,14 @@ use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use League\CLImate\CLImate;
+use Monolog\Logger;
 use SonarSoftware\Poller\Formatters\Formatter;
+use SonarSoftware\Poller\Services\SonarLogger;
 
 $client = new Client();
 $climate = new CLImate();
 $formatter = new Formatter();
+$logger = new SonarLogger();
 
 try {
     $dotenv = new Dotenv(dirname(__FILE__) . "/../");
@@ -27,6 +30,10 @@ Resque::setBackend('localhost:6379');
 if (Resque::size("polling") > 0)
 {
     $climate->shout("There are still jobs pending! Aborting.");
+    if (getenv('DEBUG') == true)
+    {
+        $logger->log("There are still jobs pending! Aborting.",Logger::ERROR);
+    }
     return;
 }
 
@@ -50,15 +57,27 @@ catch (ClientException $e)
     $response = $e->getResponse();
     $message = json_decode($response->getBody()->getContents());
     $climate->shout("Failed to get work from Sonar - {$message->error->message}");
+    if (getenv('DEBUG') == true)
+    {
+        $logger->log("Failed to get work from Sonar - {$message->error->message}",Logger::ERROR);
+    }
     return;
 }
 catch (Exception $e)
 {
     $climate->shout("Failed to get work from Sonar - {$e->getMessage()}");
+    if (getenv('DEBUG') == true)
+    {
+        $logger->log("Failed to get work from Sonar - {$e->getMessage()}",Logger::ERROR);
+    }
     return;
 }
 
 $climate->lightGreen("Obtained work from Sonar, queueing..");
+if (getenv('DEBUG') == true)
+{
+    $logger->log("Obtained work from Sonar, queueing..",Logger::INFO);
+}
 
 $contents = json_decode($result->getBody()->getContents());
 $work = $formatter->formatIcmpHostsFromSonar($contents);
