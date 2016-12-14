@@ -88,7 +88,7 @@ class SnmpPoller
                     }
 
                     //Regular GETs (this will bulk GET multiple OIDs)
-                    $snmp = new SNMP($version, $host['ip'], $templateDetails['snmp_community'], 500000, 0);
+                    $snmp = new SNMP($version, $host['ip'], $templateDetails['snmp_community'], $this->timeout, 0);
                     $snmp->valueretrieval = SNMP_VALUE_LIBRARY;
                     $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
                     $snmp->enum_print = true;
