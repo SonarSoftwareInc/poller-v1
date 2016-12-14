@@ -94,7 +94,7 @@ class Formatter
 
             foreach ($results as $result)
             {
-                $boom = explode(" ",$result);
+                $boom = preg_split('/\s+/', $result);
                 $host = $boom[0];
 
                 unset($boom[0]);
@@ -105,8 +105,6 @@ class Formatter
                 {
                     return strpos($val, '-') === 0;
                 }));
-
-
 
                 $formattedResults[$ipsToIDs[$host]] = [
                     'host' => $host,
