@@ -11,7 +11,8 @@
         "chrisboulton/php-resque": "^1.2",
         "vlucas/phpdotenv": "^2.4",
         "monolog/monolog": "^1.22",
-        "nesbot/carbon": "^1.21"
+        "nesbot/carbon": "^1.21",
+        "predis/predis": "^1.1"
     },
     "autoload": {
         "psr-4" : {
