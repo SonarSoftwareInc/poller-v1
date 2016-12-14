@@ -30,7 +30,7 @@ try {
         execCommand("/bin/mkdir /opt/poller");
     }
     execCommand("/bin/cp -R " . dirname(__FILE__) ."/. /opt/poller/");
-    execCommand("/bin/chown -R sonarpoller:sonarpoller /opt/poller/");
+    execCommand("/bin/chown -R sonarpoller:sonarpoller /opt/poller/.");
 }
 catch (RuntimeException $e)
 {
