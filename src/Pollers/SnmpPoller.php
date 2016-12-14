@@ -13,6 +13,7 @@ use SonarSoftware\Poller\Services\SonarLogger;
 class SnmpPoller
 {
     protected $snmpForks;
+    protected $timeout;
     protected $log;
 
     /** Status constants */
@@ -25,6 +26,7 @@ class SnmpPoller
         $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
         $dotenv->load();
         $this->snmpForks = (int)getenv("SNMP_FORKS") > 0 ? (int)getenv("SNMP_FORKS") : 25;
+        $this->timeout = (int)getenv("SNMP_TIMEOUT") > 0 ? (int)getenv("SNMP_TIMEOUT")*1000000 : 500000;
         $this->log = new SonarLogger();
     }
 
