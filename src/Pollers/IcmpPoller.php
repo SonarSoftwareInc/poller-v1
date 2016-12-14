@@ -10,6 +10,7 @@ use SonarSoftware\Poller\Services\SonarLogger;
 class IcmpPoller
 {
     protected $icmpForks;
+    protected $timeout;
     protected $log;
 
     /** Status constants */
@@ -22,6 +23,7 @@ class IcmpPoller
         $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
         $dotenv->load();
         $this->icmpForks = (int)getenv("ICMP_FORKS") > 0 ? (int)getenv("ICMP_FORKS") : 10;
+        $this->timeout = (int)getenv("ICMP_TIMEOUT") > 0 ? (int)getenv("ICMP_TIMEOUT")*1000 : 2000;
         $this->log = new SonarLogger();
     }
 
@@ -51,7 +53,7 @@ class IcmpPoller
             {
                 socket_close($sockets[1]);
                 usleep(rand(250000,5000000));
-                exec("/usr/bin/fping -A -b 12 -C 10 -D -p 500 -q -r 0 -t 2000 -B 1.0 -i 10 " . implode(" ",$chunks[$i]) . " 2>&1",$result,$returnVar);
+                exec("/usr/bin/fping -A -b 12 -C 10 -D -p 500 -q -r 0 -t " . escapeshellarg($this->timeout) . " -B 1.0 -i 10 " . implode(" ",$chunks[$i]) . " 2>&1",$result,$returnVar);
                 socket_write($sockets[0], serialize($result));
                 socket_close($sockets[0]);
                 exit($i);
