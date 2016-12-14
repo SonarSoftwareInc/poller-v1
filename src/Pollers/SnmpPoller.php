@@ -50,6 +50,12 @@ class SnmpPoller
 
         for ($i = 0; $i < count($chunks); $i++)
         {
+            //Don't parse empty workloads, just exit with our identifier
+            if (count($chunks[$i]) === 0)
+            {
+                exit($i);
+            }
+
             $pid = pcntl_fork();
             if (!$pid)
             {
@@ -146,10 +152,6 @@ class SnmpPoller
             if (is_array($output))
             {
                 $results = array_merge($results,$output);
-            }
-            else
-            {
-                $this->log->log("When unserializing SNMP data, no array was returned as a result of unserialization.",Logger::ERROR);
             }
 
             unlink("/tmp/$fileUniquePrefix" . "_sonar_$status");
