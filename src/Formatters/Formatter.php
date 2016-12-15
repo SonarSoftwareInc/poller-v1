@@ -32,7 +32,8 @@ class Formatter
             {
                 $formattedWork['hosts'][$hostID] = [
                     'ip' => $hostDetails->ip,
-                    'template_id' => $hostDetails->monitoring_template_id
+                    'template_id' => $hostDetails->monitoring_template_id,
+                    'snmp_overrides' => $hostDetails->snmp_overrides,
                 ];
             }
         }

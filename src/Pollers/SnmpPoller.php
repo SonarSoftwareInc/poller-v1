@@ -80,7 +80,9 @@ class SnmpPoller
                         continue;
                     }
 
-                    switch ($templateDetails['snmp_version'])
+                    $snmpVersion = isset($host['snmp_overrides']['snmp_version']) ? $host['snmp_overrides']['snmp_version'] : $templateDetails['snmp_version'];
+
+                    switch ($snmpVersion)
                     {
                         case 2:
                             $version = SNMP::VERSION_2C;
@@ -93,8 +95,10 @@ class SnmpPoller
                             break;
                     }
 
+                    $community = isset($host['snmp_overrides']['snmp_community']) ? $host['snmp_overrides']['snmp_community'] : $templateDetails['snmp_community'];
+
                     //Regular GETs (this will bulk GET multiple OIDs)
-                    $snmp = new SNMP($version, $host['ip'], $templateDetails['snmp_community'], $this->timeout, 0);
+                    $snmp = new SNMP($version, $host['ip'], $community, $this->timeout, 0);
                     $snmp->valueretrieval = SNMP_VALUE_LIBRARY;
                     $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
                     $snmp->enum_print = true;
@@ -102,7 +106,15 @@ class SnmpPoller
 
                     if ($version === SNMP::VERSION_3)
                     {
-                        $snmp->setSecurity($templateDetails['snmp3_sec_level'],$templateDetails['snmp3_auth_protocol'],$templateDetails['snmp3_auth_passphrase'],$templateDetails['snmp3_priv_protocol'],$templateDetails['snmp3_priv_passphrase'],$templateDetails['snmp3_context_name'],$templateDetails['snmp3_context_engine_id']);
+                        $snmp->setSecurity(
+                            isset($host['snmp_overrides']['snmp3_sec_level']) ? $host['snmp_overrides']['snmp3_sec_level'] : $templateDetails['snmp3_sec_level'],
+                            isset($host['snmp_overrides']['snmp3_auth_protocol']) ? $host['snmp_overrides']['snmp3_auth_protocol'] : $templateDetails['snmp3_auth_protocol'],
+                            isset($host['snmp_overrides']['snmp3_auth_passphrase']) ? $host['snmp_overrides']['snmp3_auth_passphrase'] : $templateDetails['snmp3_auth_passphrase'],
+                            isset($host['snmp_overrides']['snmp3_priv_protocol']) ? $host['snmp_overrides']['snmp3_priv_protocol'] : $templateDetails['snmp3_priv_protocol'],
+                            isset($host['snmp_overrides']['snmp3_priv_passphrase']) ? $host['snmp_overrides']['snmp3_priv_passphrase'] : $templateDetails['snmp3_priv_passphrase'],
+                            isset($host['snmp_overrides']['snmp3_context_name']) ? $host['snmp_overrides']['snmp3_context_name'] : $templateDetails['snmp3_context_name'],
+                            isset($host['snmp_overrides']['snmp3_context_engine_id']) ? $host['snmp_overrides']['snmp3_context_engine_id'] : $templateDetails['snmp3_context_engine_id']
+                        );
                     }
 
                     try {

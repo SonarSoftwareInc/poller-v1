@@ -16,6 +16,9 @@ $climate = new CLImate();
 $formatter = new Formatter();
 $logger = new SonarLogger();
 
+ini_set('memory_limit','2G');
+set_time_limit(60);
+
 try {
     $dotenv = new Dotenv(dirname(__FILE__) . "/../");
     $dotenv->load();
@@ -37,9 +40,6 @@ if (TemporaryVariables::get("ICMP Polling Running") == 1 || TemporaryVariables::
     }
     return;
 }
-
-ini_set('memory_limit','2G');
-set_time_limit(60);
 
 try {
     try {
