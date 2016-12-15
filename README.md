@@ -47,7 +47,7 @@ You can also automate updates by adding an auto-updater file to cron. To do this
 
 **In most scenarios, you can leave all configuration settings at their defaults and have an efficient, fast poller. This section is only for very large networks, or users who wish to tinker!**
 
-The poller automatically forks multiple pinging and SNMP polling processes when running. The quantity of times it forks is defined in the `.env` file,
+The poller automatically forks multiple ICMP and SNMP polling processes when running. The quantity of times it forks is defined in the `.env` file,
 as `ICMP_FORKS` and `SNMP_FORKS`. The default values for these settings are a good fit for most systems.
 
 There are also timeout values set for both ICMP polling and SNMP polling as `ICMP_TIMEOUT` and `SNMP_TIMEOUT`, respectively. These
