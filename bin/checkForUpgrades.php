@@ -1,4 +1,6 @@
 <?php
+use SonarSoftware\Poller\Services\TemporaryVariables;
+
 require("/opt/poller/vendor/autoload.php");
 
 $currentVersion = (string)file_get_contents("/opt/poller/resources/version");
@@ -12,7 +14,13 @@ $latestVersion = $body[0]->name;
 if (version_compare($currentVersion, $latestVersion) === -1)
 {
     echo "There is a newer version, $latestVersion.\n";
-    exec("(cd /opt/poller; git pull origin master)",$output,$returnVal);
+    exec("(cd /opt/poller; git reset --hard origin/master)",$output,$returnVal);
+    if ($returnVal !== 0)
+    {
+        echo "There was an error updating to master.\n";
+        return;
+    }
+    exec("(cd /opt/poller; git pull)",$output,$returnVal);
     if ($returnVal !== 0)
     {
         echo "There was an error updating to master.\n";
@@ -26,6 +34,9 @@ if (version_compare($currentVersion, $latestVersion) === -1)
     }
 
     exec("/usr/bin/monit restart defaultQueue");
+    
+    TemporaryVariables::set("SNMP Polling Running",0);
+    TemporaryVariables::set("ICMP Polling Running",0);
 }
 
 echo "You are on the latest version.\n";
