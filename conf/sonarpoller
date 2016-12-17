@@ -1,0 +1,12 @@
+/var/log/sonar_poller.log {
+
+    weekly
+    rotate 4
+    compress
+
+    delaycompress
+    missingok
+
+    create 644 sonarpoller sonarpoller
+    su sonarpoller sonarpoller
+}
