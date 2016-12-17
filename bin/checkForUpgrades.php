@@ -20,6 +20,12 @@ if (version_compare($currentVersion, $latestVersion) === -1)
         echo "There was an error updating to master.\n";
         return;
     }
+    exec("(cd /opt/poller; sudo -u sonarpoller git pull https://github.com/sonarsoftware/poller master)",$output,$returnVal);
+    if ($returnVal !== 0)
+    {
+        echo "There was an error updating to master.\n";
+        return;
+    }
     exec("(cd /opt/poller; sudo -u sonarpoller git checkout $latestVersion)",$output,$returnVal);
     if ($returnVal !== 0)
     {
