@@ -15,6 +15,7 @@ class SnmpPoller
     protected $snmpForks;
     protected $timeout;
     protected $log;
+    protected $retries;
 
     /** Status constants */
     const GOOD = 2;
@@ -27,6 +28,7 @@ class SnmpPoller
         $dotenv->load();
         $this->snmpForks = (int)getenv("SNMP_FORKS") > 0 ? (int)getenv("SNMP_FORKS") : 25;
         $this->timeout = (int)getenv("SNMP_TIMEOUT") > 0 ? (int)getenv("SNMP_TIMEOUT")*1000000 : 500000;
+        $this->retries = (int)getenv("SNMP_RETRIES");
         $this->log = new SonarLogger();
     }
 
@@ -98,7 +100,7 @@ class SnmpPoller
                     $community = isset($host['snmp_overrides']['snmp_community']) ? $host['snmp_overrides']['snmp_community'] : $templateDetails['snmp_community'];
 
                     //Regular GETs (this will bulk GET multiple OIDs)
-                    $snmp = new SNMP($version, $host['ip'], $community, $this->timeout, 0);
+                    $snmp = new SNMP($version, $host['ip'], $community, $this->timeout, $this->retries);
                     $snmp->valueretrieval = SNMP_VALUE_LIBRARY;
                     $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
                     $snmp->enum_print = true;
