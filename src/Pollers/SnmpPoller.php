@@ -16,6 +16,7 @@ class SnmpPoller
     protected $timeout;
     protected $log;
     protected $retries;
+    protected $templates;
 
     /** Status constants */
     const GOOD = 2;
@@ -44,131 +45,62 @@ class SnmpPoller
             return [];
         }
 
+        $this->templates = $work['templates'];
+
         $chunks = array_chunk($work['hosts'],ceil(count($work['hosts'])/$this->snmpForks));
-
         $results = [];
-
         $fileUniquePrefix = uniqid(true);
+
+        $pids = [];
 
         for ($i = 0; $i < count($chunks); $i++)
         {
-            //Don't parse empty workloads, just exit with our identifier
-            if (count($chunks[$i]) === 0)
-            {
-                exit($i);
-            }
-
             $pid = pcntl_fork();
             if (!$pid)
             {
-                foreach ($chunks[$i] as $host)
+                //Don't parse empty workloads
+                if (count($chunks[$i]) === 0)
                 {
-                    $resultToWrite[$host['ip']] = [
-                        'results' => [
-                            'oids' => null,
-                            'interfaces' => null,
-                        ],
-                        'status' => [
-                            'status' => $this::GOOD,
-                            'status_reason' => null,
-                        ],
-                        'time' => time(),
-                    ];
-
-                    $templateDetails = $work['templates'][$host['template_id']];
-
-                    if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
-                    {
-                        continue;
-                    }
-
-                    $snmpVersion = isset($host['snmp_overrides']['snmp_version']) ? $host['snmp_overrides']['snmp_version'] : $templateDetails['snmp_version'];
-
-                    switch ($snmpVersion)
-                    {
-                        case 2:
-                            $version = SNMP::VERSION_2C;
-                            break;
-                        case 3:
-                            $version = SNMP::VERSION_3;
-                            break;
-                        default:
-                            $version = SNMP::VERSION_1;
-                            break;
-                    }
-
-                    $community = isset($host['snmp_overrides']['snmp_community']) ? $host['snmp_overrides']['snmp_community'] : $templateDetails['snmp_community'];
-
-                    //Regular GETs (this will bulk GET multiple OIDs)
-                    $snmp = new SNMP($version, $host['ip'], $community, $this->timeout, $this->retries);
-                    $snmp->valueretrieval = SNMP_VALUE_LIBRARY;
-                    $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
-                    $snmp->enum_print = true;
-                    $snmp->exceptions_enabled = SNMP::ERRNO_ANY;
-
-                    if ($version === SNMP::VERSION_3)
-                    {
-                        $snmp->setSecurity(
-                            isset($host['snmp_overrides']['snmp3_sec_level']) ? $host['snmp_overrides']['snmp3_sec_level'] : $templateDetails['snmp3_sec_level'],
-                            isset($host['snmp_overrides']['snmp3_auth_protocol']) ? $host['snmp_overrides']['snmp3_auth_protocol'] : $templateDetails['snmp3_auth_protocol'],
-                            isset($host['snmp_overrides']['snmp3_auth_passphrase']) ? $host['snmp_overrides']['snmp3_auth_passphrase'] : $templateDetails['snmp3_auth_passphrase'],
-                            isset($host['snmp_overrides']['snmp3_priv_protocol']) ? $host['snmp_overrides']['snmp3_priv_protocol'] : $templateDetails['snmp3_priv_protocol'],
-                            isset($host['snmp_overrides']['snmp3_priv_passphrase']) ? $host['snmp_overrides']['snmp3_priv_passphrase'] : $templateDetails['snmp3_priv_passphrase'],
-                            isset($host['snmp_overrides']['snmp3_context_name']) ? $host['snmp_overrides']['snmp3_context_name'] : $templateDetails['snmp3_context_name'],
-                            isset($host['snmp_overrides']['snmp3_context_engine_id']) ? $host['snmp_overrides']['snmp3_context_engine_id'] : $templateDetails['snmp3_context_engine_id']
-                        );
-                    }
-
-                    try {
-                        if (count($templateDetails['oids']) > 0)
-                        {
-                            $result = $snmp->get(array_values($templateDetails['oids']));
-                            $resultToWrite[$host["ip"]]['results']['oids'] = json_decode(json_encode($result),true);
-                        }
-                    }
-                    catch (SNMPException $e)
-                    {
-                        $resultToWrite[$host['ip']]['status'] = $this->updateStatusAfterException($e);
-                    }
-
-                    //Interface statistics
-                    if ($templateDetails['collect_interface_statistics'] == true)
-                    {
-                        try {
-                            $result = $snmp->walk("1.3.6.1.2.1.2.2.1");
-                            $resultToWrite[$host['ip']]['results']['interfaces'] = json_decode(json_encode($result),true);
-                        }
-                        catch (SNMPException $e)
-                        {
-                            $resultToWrite[$host['ip']]['status'] = $this->updateStatusAfterException($e);
-                        }
-                    }
-
-                    $handle = fopen("/tmp/$fileUniquePrefix" . "_sonar_$i","w");
-                    if ($handle === false)
-                    {
-                        $this->log->log("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$i",Logger::ERROR);
-                        throw new RuntimeException("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$i");
-                    }
-
-                    fwrite($handle, json_encode($resultToWrite));
-                    fclose($handle);
+                    exit();
                 }
 
-                exit($i);
+                $this->pollDevices($chunks[$i],$fileUniquePrefix, $i);
+                exit();
+            }
+            else
+            {
+                $pids[$pid] = $pid;
             }
         }
 
-        while (pcntl_waitpid(0, $status) != -1)
+
+        while (count($pids) > 0)
         {
-            $status = pcntl_wexitstatus($status);
-            $output = json_decode(file_get_contents("/tmp/$fileUniquePrefix" . "_sonar_$status"),true);
+            foreach ($pids as $pid)
+            {
+                $res = pcntl_waitpid($pid, $status, WNOHANG);
+                if ($res == -1 || $res > 0)
+                {
+                    unset($pids[$pid]);
+                }
+            }
+
+            sleep(1);
+        }
+
+        $files = glob("/tmp/$fileUniquePrefix*");
+        foreach ($files as $file)
+        {
+            $output = json_decode(file_get_contents($file),true);
             if (is_array($output))
             {
                 $results = array_merge($results,$output);
+                unlink($file);
             }
-
-            unlink("/tmp/$fileUniquePrefix" . "_sonar_$status");
+            else
+            {
+                $this->log->log("Couldn't open $file",Logger::INFO);
+            }
         }
 
         $formatter = new Formatter();
@@ -201,5 +133,110 @@ class SnmpPoller
         }
 
         return $return;
+    }
+
+    /**
+     * Child polling process
+     * @param $chunks
+     * @param $fileUniquePrefix
+     * @param $counter
+     */
+    private function pollDevices($chunks, $fileUniquePrefix, $counter)
+    {
+        $handle = fopen("/tmp/$fileUniquePrefix" . "_sonar_$counter","w");
+        if ($handle === false)
+        {
+            $this->log->log("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$counter",Logger::ERROR);
+            throw new RuntimeException("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$counter");
+        }
+
+        $resultToWrite = [];
+
+        foreach ($chunks as $host)
+        {
+            $resultToWrite[$host['ip']] = [
+                'results' => [
+                    'oids' => null,
+                    'interfaces' => null,
+                ],
+                'status' => [
+                    'status' => $this::GOOD,
+                    'status_reason' => null,
+                ],
+                'time' => time(),
+            ];
+
+            $templateDetails = $this->templates[$host['template_id']];
+
+            if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
+            {
+                continue;
+            }
+
+            $snmpVersion = isset($host['snmp_overrides']['snmp_version']) ? $host['snmp_overrides']['snmp_version'] : $templateDetails['snmp_version'];
+
+            switch ($snmpVersion)
+            {
+                case 2:
+                    $version = SNMP::VERSION_2C;
+                    break;
+                case 3:
+                    $version = SNMP::VERSION_3;
+                    break;
+                default:
+                    $version = SNMP::VERSION_1;
+                    break;
+            }
+
+            $community = isset($host['snmp_overrides']['snmp_community']) ? $host['snmp_overrides']['snmp_community'] : $templateDetails['snmp_community'];
+
+            //Regular GETs (this will bulk GET multiple OIDs)
+            $snmp = new SNMP($version, $host['ip'], $community, $this->timeout, $this->retries);
+            $snmp->valueretrieval = SNMP_VALUE_LIBRARY;
+            $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
+            $snmp->enum_print = true;
+            $snmp->exceptions_enabled = SNMP::ERRNO_ANY;
+
+            if ($version === SNMP::VERSION_3)
+            {
+                $snmp->setSecurity(
+                    isset($host['snmp_overrides']['snmp3_sec_level']) ? $host['snmp_overrides']['snmp3_sec_level'] : $templateDetails['snmp3_sec_level'],
+                    isset($host['snmp_overrides']['snmp3_auth_protocol']) ? $host['snmp_overrides']['snmp3_auth_protocol'] : $templateDetails['snmp3_auth_protocol'],
+                    isset($host['snmp_overrides']['snmp3_auth_passphrase']) ? $host['snmp_overrides']['snmp3_auth_passphrase'] : $templateDetails['snmp3_auth_passphrase'],
+                    isset($host['snmp_overrides']['snmp3_priv_protocol']) ? $host['snmp_overrides']['snmp3_priv_protocol'] : $templateDetails['snmp3_priv_protocol'],
+                    isset($host['snmp_overrides']['snmp3_priv_passphrase']) ? $host['snmp_overrides']['snmp3_priv_passphrase'] : $templateDetails['snmp3_priv_passphrase'],
+                    isset($host['snmp_overrides']['snmp3_context_name']) ? $host['snmp_overrides']['snmp3_context_name'] : $templateDetails['snmp3_context_name'],
+                    isset($host['snmp_overrides']['snmp3_context_engine_id']) ? $host['snmp_overrides']['snmp3_context_engine_id'] : $templateDetails['snmp3_context_engine_id']
+                );
+            }
+
+            try {
+                if (count($templateDetails['oids']) > 0)
+                {
+                    $result = $snmp->get(array_values($templateDetails['oids']));
+                    $resultToWrite[$host["ip"]]['results']['oids'] = json_decode(json_encode($result),true);
+                }
+            }
+            catch (SNMPException $e)
+            {
+                $resultToWrite[$host['ip']]['status'] = $this->updateStatusAfterException($e);
+            }
+
+            //Interface statistics
+            if ($templateDetails['collect_interface_statistics'] == true)
+            {
+                try {
+                    $result = $snmp->walk("1.3.6.1.2.1.2.2.1");
+                    $resultToWrite[$host['ip']]['results']['interfaces'] = json_decode(json_encode($result),true);
+                }
+                catch (SNMPException $e)
+                {
+                    $resultToWrite[$host['ip']]['status'] = $this->updateStatusAfterException($e);
+                }
+            }
+        }
+
+        fwrite($handle, json_encode($resultToWrite));
+        fclose($handle);
     }
 }
