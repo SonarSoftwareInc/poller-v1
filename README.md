@@ -29,7 +29,7 @@ Once the packages are installed, clone the poller from this repository by typing
 
 Once the install is complete, navigate to your Sonar instance, go to Network > Monitoring > Pollers, and add a new entry for this poller. Select all the subnets you wish this poller to poll. After it is added, copy the API key shown in the poller list - you'll need it in a second.
 
-Once the installer is finished, type `cp /opt/poller/.env.example /opt/poller/.env` and then `nano -w /opt/poller/.env`. Modify the `SONAR_URI` value to be the full path to your Sonar instance, including https://. Modify the `API_KEY` value to be the API key you copied from Sonar a moment ago.
+Once the installer is finished, type `sudo -u sonarpoller cp /opt/poller/.env.example /opt/poller/.env` and then `sudo -u sonarpoller nano -w /opt/poller/.env`. Modify the `SONAR_URI` value to be the full path to your Sonar instance, including https://. Modify the `API_KEY` value to be the API key you copied from Sonar a moment ago.
 
 Press `CTRL+X` to exit nano, and save the changes you made.
 
