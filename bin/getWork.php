@@ -57,11 +57,21 @@ try {
     catch (ClientException $e)
     {
         $response = $e->getResponse();
-        $message = json_decode($response->getBody()->getContents());
-        $climate->shout("Failed to get work from Sonar - {$message->error->message}");
-        if (getenv('DEBUG') == true)
+        try {
+            $message = json_decode($response->getBody()->getContents());
+            $climate->shout("Failed to get work from Sonar - {$message->error->message}");
+            if (getenv('DEBUG') == true)
+            {
+                $logger->log("Failed to get work from Sonar - {$message->error->message}",Logger::ERROR);
+            }
+        }
+        catch (Exception $e)
         {
-            $logger->log("Failed to get work from Sonar - {$message->error->message}",Logger::ERROR);
+            $climate->shout("Failed to get work from Sonar - {$e->getMessage()}");
+            if (getenv('DEBUG') == true)
+            {
+                $logger->log("Failed to get work from Sonar - {$e->getMessage()}",Logger::ERROR);
+            }
         }
         return;
     }
