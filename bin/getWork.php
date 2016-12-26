@@ -47,6 +47,7 @@ try {
             'headers' => [
                 'Content-Type' => 'application/json; charset=UTF8',
                 'timeout' => 30,
+                'Content-Length' => 0,
             ],
             'json' => [
                 'api_key' => getenv("API_KEY"),
