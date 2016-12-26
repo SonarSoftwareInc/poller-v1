@@ -43,7 +43,7 @@ if (TemporaryVariables::get("ICMP Polling Running") == 1 || TemporaryVariables::
 
 try {
     try {
-        $result = $client->get(getenv("SONAR_URI") . "/api/poller", [
+        $result = $client->post(getenv("SONAR_URI") . "/api/poller", [
             'headers' => [
                 'Content-Type' => 'application/json; charset=UTF8',
                 'timeout' => 30,
