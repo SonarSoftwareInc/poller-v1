@@ -35,7 +35,7 @@ Press `CTRL+X` to exit nano, and save the changes you made.
 
 ## Testing
 
-You can test the pollers ability to obtain and deliver work by typing `php /opt/poller/bin/getWork.php`. If something is misconfigured, you will receive a message with details about the problem. If you see `Obtained work from Sonar, queueing..` then everything is configured correctly.
+You can test the pollers ability to obtain and deliver work by typing `sudo -u sonarpoller php /opt/poller/bin/getWork.php`. If something is misconfigured, you will receive a message with details about the problem. If you see `Obtained work from Sonar, queueing..` then everything is configured correctly.
 
 ## Upgrading
 
