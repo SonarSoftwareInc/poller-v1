@@ -16,9 +16,18 @@ class ExtensionsCest
     public function loadExtensionByOverride(CliGuy $I)
     {
         $I->amInPath('tests/data/sandbox');
-        $I->executeCommand('run tests/dummy/FileExistsCept.php -o "extensions: enabled: [\Codeception\Extension\SimpleOutput]"');
+        $I->executeCommand('run tests/dummy/FileExistsCept.php -o "extensions: enabled: [\Codeception\Extension\SimpleReporter]"');
         $I->dontSeeInShellOutput("Check config");
         $I->seeInShellOutput('[+] FileExistsCept');
+    }
+
+    public function dynamicallyEnablingExtensions(CliGuy $I)
+    {
+        $I->amInPath('tests/data/sandbox');
+        $I->executeCommand('run dummy --ext DotReporter');
+        $I->seeInShellOutput('......');
+        $I->dontSeeInShellOutput('Optimistic');
+        $I->dontSeeInShellOutput('AnotherCest');
     }
 
     public function reRunFailedTests(CliGuy $I)
@@ -49,4 +58,29 @@ EOF
         $I->executeCommand('run tests/dummy/AnotherCest.php:optimistic -c codeception_extended.yml -vvv');
         $I->seeInShellOutput('Extreme verbosity');
     }
+
+    public function runPerSuiteExtensions(CliGuy $I)
+    {
+        $I->amInPath('tests/data/sandbox');
+        $I->executeCommand('run extended,scenario', false);
+        $I->seeInShellOutput('Suite setup for extended');
+        $I->seeInShellOutput('Test setup for Hello');
+        $I->seeInShellOutput('Test teardown for Hello');
+        $I->seeInShellOutput('Suite teardown for extended');
+        $I->dontSeeInShellOutput('Suite setup for scenario');
+        $I->seeInShellOutput('Config1: value1');
+        $I->seeInShellOutput('Config2: value2');
+    }
+
+    public function runPerSuiteExtensionsInEnvironment(CliGuy $I)
+    {
+        $I->amInPath('tests/data/sandbox');
+        $I->executeCommand('run extended --env black', false);
+        $I->seeInShellOutput('Suite setup for extended');
+        $I->seeInShellOutput('Test setup for Hello');
+        $I->seeInShellOutput('Config1: black_value');
+        $I->seeInShellOutput('Config2: value2');
+    }
+
+
 }

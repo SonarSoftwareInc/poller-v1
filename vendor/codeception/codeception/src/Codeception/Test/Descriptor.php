@@ -26,10 +26,6 @@ class Descriptor
 
     public static function getTestAsString(\PHPUnit_Framework_SelfDescribing $testCase)
     {
-        if ($testCase instanceof Descriptive) {
-            return $testCase->toString();
-        }
-
         if ($testCase instanceof \PHPUnit_Framework_TestCase) {
             $text = $testCase->getName();
             $text = preg_replace('/([A-Z]+)([A-Z][a-z])/', '\\1 \\2', $text);
@@ -39,6 +35,7 @@ class Descriptor
             $text = str_replace(['::', 'with data set'], [':', '|'], $text);
             return ReflectionHelper::getClassShortName($testCase) . ': ' . $text;
         }
+
         return $testCase->toString();
     }
 
@@ -51,7 +48,7 @@ class Descriptor
     public static function getTestFileName(\PHPUnit_Framework_SelfDescribing $testCase)
     {
         if ($testCase instanceof Descriptive) {
-            return $testCase->getFileName();
+            return codecept_relative_path(realpath($testCase->getFileName()));
         }
         return (new \ReflectionClass($testCase))->getFileName();
     }

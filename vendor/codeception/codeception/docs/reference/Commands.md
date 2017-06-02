@@ -38,11 +38,39 @@ Usage:
 
 
 
+## Init
+
+
+
 ## Console
 
 Try to execute test commands in run-time. You may try commands before writing the test.
 
 * `codecept console acceptance` - starts acceptance suite environment. If you use WebDriver you can manipulate browser with Codeception commands.
+
+
+
+## ConfigValidate
+
+Validates and prints Codeception config.
+Use it do debug Yaml configs
+
+Check config:
+
+* `codecept config`: check global config
+* `codecept config unit`: check suite config
+
+Load config:
+
+* `codecept config:validate -c path/to/another/config`: from another dir
+* `codecept config:validate -c another_config.yml`: from another config file
+
+Check overriding config values (like in `run` command)
+
+* `codecept config:validate -o "settings: shuffle: true"`: enable shuffle
+* `codecept config:validate -o "settings: lint: false"`: disable linting
+* `codecept config:validate -o "reporters: report: \Custom\Reporter" --report`: use custom reporter
+
 
 
 
@@ -71,11 +99,38 @@ Executes tests.
 
 Usage:
 
-* `codecept run acceptance` - run all acceptance tests
-* `codecept run tests/acceptance/MyCept.php` - run only MyCept
-* `codecept run acceptance MyCept` - same as above
-* `codecept run acceptance MyCest:myTestInIt` - run one test from a Cest
-* `codecept run acceptance checkout.feature` - run feature-file
+* `codecept run acceptance`: run all acceptance tests
+* `codecept run tests/acceptance/MyCept.php`: run only MyCept
+* `codecept run acceptance MyCept`: same as above
+* `codecept run acceptance MyCest:myTestInIt`: run one test from a Cest
+* `codecept run acceptance checkout.feature`: run feature-file
+* `codecept run acceptance -g slow`: run tests from *slow* group
+* `codecept run unit,functional`: run only unit and functional suites
+
+Verbosity modes:
+
+* `codecept run -v`:
+* `codecept run --steps`: print step-by-step execution
+* `codecept run -vv`:
+* `codecept run --debug`: print steps and debug information
+* `codecept run -vvv`: print internal debug information
+
+Load config:
+
+* `codecept run -c path/to/another/config`: from another dir
+* `codecept run -c another_config.yml`: from another config file
+
+Override config values:
+
+* `codecept run -o "settings: shuffle: true"`: enable shuffle
+* `codecept run -o "settings: lint: false"`: disable linting
+* `codecept run -o "reporters: report: \Custom\Reporter" --report`: use custom reporter
+
+Run with specific extension
+
+* `codecept run --ext Recorder` run with Recorder extension enabled
+* `codecept run --ext DotReporter` run with DotReporter printer
+* `codecept run --ext "My\Custom\Extension"` run with an extension loaded by class name
 
 Full reference:
 ```
@@ -84,6 +139,7 @@ Arguments:
  test                  test to be run
 
 Options:
+ -o, --override=OVERRIDE Override config values (multiple values allowed)
  --config (-c)         Use custom path for config
  --report              Show output in compact style
  --html                Generate html with results (default: "report.html")
@@ -194,17 +250,6 @@ Generates Feature file (in Gherkin):
 
 
 
-## GeneratePhpUnit
-
-Generates skeleton for unit test as in classical PHPUnit.
-
-* `codecept g:phpunit unit UserTest`
-* `codecept g:phpunit unit User`
-* `codecept g:phpunit unit "App\User`
-
-
-
-
 ## GenerateScenarios
 
 Generates user-friendly text scenarios from scenario-driven tests (Cest, Cept).
@@ -243,6 +288,10 @@ Prints all steps from all Gherkin contexts for a specific suite
 codecept gherkin:steps acceptance
 ```
 
+
+
+
+## Completion
 
 
 

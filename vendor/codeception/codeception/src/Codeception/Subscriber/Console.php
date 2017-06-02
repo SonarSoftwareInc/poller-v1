@@ -67,7 +67,8 @@ class Console implements EventSubscriberInterface
      * @var OutputInterface
      */
     protected $output;
-    protected $fails = [];
+    protected $conditionalFails = [];
+    protected $failedStep;
     protected $reports = [];
     protected $namespace = '';
     protected $chars = ['success' => '+', 'fail' => 'x', 'of' => ':'];
@@ -155,7 +156,7 @@ class Console implements EventSubscriberInterface
     // triggered for all tests
     public function startTest(TestEvent $e)
     {
-        $this->fails = [];
+        $this->conditionalFails = [];
         $test = $e->getTest();
         $this->printedTest = $test;
         $this->message = null;
@@ -186,9 +187,14 @@ class Console implements EventSubscriberInterface
     public function afterStep(StepEvent $e)
     {
         $step = $e->getStep();
-        if ($step->hasFailed() and $step instanceof Step\ConditionalAssertion) {
-            $this->fails[] = $step;
+        if (!$step->hasFailed()) {
+            return;
         }
+        if ($step instanceof Step\ConditionalAssertion) {
+            $this->conditionalFails[] = $step;
+            return;
+        }
+        $this->failedStep = $step;
     }
 
     /**
@@ -354,7 +360,7 @@ class Console implements EventSubscriberInterface
         $this->printExceptionTrace($fail);
     }
 
-    protected function printException($e, $cause = null)
+    public function printException($e, $cause = null)
     {
         if ($e instanceof \PHPUnit_Framework_SkippedTestError or $e instanceof \PHPUnit_Framework_IncompleteTestError) {
             if ($e->getMessage()) {
@@ -398,20 +404,20 @@ class Console implements EventSubscriberInterface
         $message->writeln();
     }
 
-    protected function printScenarioFail(ScenarioDriven $failedTest, $fail)
+    public function printScenarioFail(ScenarioDriven $failedTest, $fail)
     {
-        $failToString = \PHPUnit_Framework_TestFailure::exceptionToString($fail);
-
-        $failedStep = "";
-        foreach ($failedTest->getScenario()->getSteps() as $step) {
-            if ($step->hasFailed()) {
-                $failedStep = (string) $step;
-                break;
+        if ($this->conditionalFails) {
+            $failedStep = (string) array_shift($this->conditionalFails);
+        } else {
+            $failedStep = (string) $failedTest->getScenario()->getMetaStep();
+            if ($failedStep === '') {
+                $failedStep = (string)$this->failedStep;
             }
         }
+
         $this->printException($fail, $failedStep);
 
-        $this->printScenarioTrace($failedTest, $failToString);
+        $this->printScenarioTrace($failedTest);
         if ($this->output->getVerbosity() == OutputInterface::VERBOSITY_DEBUG) {
             $this->printExceptionTrace($fail);
 
@@ -517,7 +523,7 @@ class Console implements EventSubscriberInterface
         $this->output->writeln("");
     }
 
-    protected function detectWidth()
+    public function detectWidth()
     {
         $this->width = 60;
         if (!$this->isWin()
@@ -525,12 +531,19 @@ class Console implements EventSubscriberInterface
             && (getenv('TERM'))
             && (getenv('TERM') != 'unknown')
         ) {
-            $this->width = (int) (`command -v tput >> /dev/null 2>&1 && tput cols`) - 2;
+            // try to get terminal width from ENV variable (bash), see also https://github.com/Codeception/Codeception/issues/3788
+            if (getenv('COLUMNS')) {
+                $this->width = getenv('COLUMNS');
+            } else {
+                $this->width = (int) (`command -v tput >> /dev/null 2>&1 && tput cols`) - 2;
+            }
         } elseif ($this->isWin() && (php_sapi_name() === "cli")) {
             exec('mode con', $output);
-            preg_match('/^ +.* +(\d+)$/', $output[4], $matches);
-            if (!empty($matches[1])) {
-                $this->width = (int) $matches[1];
+            if (isset($output[4])) {
+                preg_match('/^ +.* +(\d+)$/', $output[4], $matches);
+                if (!empty($matches[1])) {
+                    $this->width = (int) $matches[1];
+                }
             }
         }
         return $this->width;
@@ -550,7 +563,7 @@ class Console implements EventSubscriberInterface
         $prefix = ($this->output->isInteractive() and !$this->isDetailed($test) and $inProgress) ? '- ' : '';
 
         $testString = Descriptor::getTestAsString($test);
-        $testString = preg_replace('~^([\s\w\\\]+):\s~', "<focus>$1{$this->chars['of']}</focus> ", $testString);
+        $testString = preg_replace('~^([^:]+):\s~', "<focus>$1{$this->chars['of']}</focus> ", $testString);
 
         $this
             ->message($testString)
@@ -571,15 +584,15 @@ class Console implements EventSubscriberInterface
         $result->append(' ')->write();
         $this->writeCurrentTest($test, false);
 
-        $conditionalFails = "";
-        $numFails = count($this->fails);
+        $conditionalFailsMessage = "";
+        $numFails = count($this->conditionalFails);
         if ($numFails == 1) {
-            $conditionalFails = "[F]";
+            $conditionalFailsMessage = "[F]";
         } elseif ($numFails) {
-            $conditionalFails = "{$numFails}x[F]";
+            $conditionalFailsMessage = "{$numFails}x[F]";
         }
-        $conditionalFails = "<error>$conditionalFails</error> ";
-        $this->message($conditionalFails)->write();
+        $conditionalFailsMessage = "<error>$conditionalFailsMessage</error> ";
+        $this->message($conditionalFailsMessage)->write();
         $this->writeTimeInformation($event);
         $this->output->writeln('');
     }

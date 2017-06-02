@@ -80,7 +80,7 @@ class PerformSnmpGets
         }
         finally
         {
-            TemporaryVariables::set("SNMP Polling Running",0);
+            TemporaryVariables::set("SNMP Polling Running",null);
         }
     }
 }

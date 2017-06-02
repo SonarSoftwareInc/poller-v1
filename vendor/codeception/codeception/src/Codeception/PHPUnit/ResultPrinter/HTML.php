@@ -7,6 +7,7 @@ use Codeception\Step\Meta;
 use Codeception\Test\Descriptor;
 use Codeception\Test\Interfaces\ScenarioDriven;
 use Codeception\TestInterface;
+use Codeception\Util\PathResolver;
 
 class HTML extends CodeceptionResultPrinter
 {
@@ -106,14 +107,12 @@ class HTML extends CodeceptionResultPrinter
 
         foreach ($steps as $step) {
             if ($step->getMetaStep()) {
-
                 if (! empty($subStepsRendered[$step->getMetaStep()->getAction()])) {
                     $subStepsBuffer = implode('', $subStepsRendered[$step->getMetaStep()->getAction()]);
                     unset($subStepsRendered[$step->getMetaStep()->getAction()]);
 
                     $stepsBuffer .= $this->renderSubsteps($step->getMetaStep(), $subStepsBuffer);
                 }
-
             } else {
                 $stepsBuffer .= $this->renderStep($step);
             }
@@ -123,14 +122,16 @@ class HTML extends CodeceptionResultPrinter
             $this->templatePath . 'scenario.html'
         );
 
-        $failure = '';
+        $failures = '';
         $name = Descriptor::getTestSignature($test);
         if (isset($this->failures[$name])) {
             $failTemplate = new \Text_Template(
                 $this->templatePath . 'fail.html'
             );
-            $failTemplate->setVar(['fail' => nl2br($this->failures[$name])]);
-            $failure = $failTemplate->render();
+            foreach ($this->failures[$name] as $failure) {
+                $failTemplate->setVar(['fail' => nl2br($failure)]);
+                $failures .= $failTemplate->render() . PHP_EOL;
+            }
         }
 
         $png = '';
@@ -138,12 +139,13 @@ class HTML extends CodeceptionResultPrinter
         if ($test instanceof TestInterface) {
             $reports = $test->getMetadata()->getReports();
             if (isset($reports['png'])) {
-                $png = "<tr><td class='error'><div class='screenshot'><img src='file://{$reports['png']}' alt='failure screenshot'></div></td></tr>";
+                $localPath = PathResolver::getRelativeDir($reports['png'], codecept_output_dir());
+                $png = "<tr><td class='error'><div class='screenshot'><img src='$localPath' alt='failure screenshot'></div></td></tr>";
             }
             if (isset($reports['html'])) {
-                $html = "<tr><td class='error'>See <a href='file://{$reports['html']}' target='_blank'>HTML snapshot</a> of a failed page</td></tr>";
+                $localPath = PathResolver::getRelativeDir($reports['html'], codecept_output_dir());
+                $html = "<tr><td class='error'>See <a href='$localPath' target='_blank'>HTML snapshot</a> of a failed page</td></tr>";
             }
-
         }
 
         $toggle = $stepsBuffer ? '<span class="toggle">+</span>' : '';
@@ -157,7 +159,7 @@ class HTML extends CodeceptionResultPrinter
                 'scenarioStatus' => $scenarioStatus,
                 'steps'          => $stepsBuffer,
                 'toggle'         => $toggle,
-                'failure'        => $failure,
+                'failure'        => $failures,
                 'png'            => $png,
                 'html'            => $html,
                 'time'           => round($time, 2)
@@ -232,7 +234,7 @@ class HTML extends CodeceptionResultPrinter
      */
     public function addError(\PHPUnit_Framework_Test $test, \Exception $e, $time)
     {
-        $this->failures[Descriptor::getTestSignature($test)] = $this->cleanMessage($e);
+        $this->failures[Descriptor::getTestSignature($test)][] = $this->cleanMessage($e);
         parent::addError($test, $e, $time);
     }
 
@@ -245,7 +247,7 @@ class HTML extends CodeceptionResultPrinter
      */
     public function addFailure(\PHPUnit_Framework_Test $test, \PHPUnit_Framework_AssertionFailedError $e, $time)
     {
-        $this->failures[Descriptor::getTestSignature($test)] = $this->cleanMessage($e);
+        $this->failures[Descriptor::getTestSignature($test)][] = $this->cleanMessage($e);
         parent::addFailure($test, $e, $time);
     }
 

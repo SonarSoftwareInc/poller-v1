@@ -80,7 +80,7 @@ class PerformIcmpPolling
         }
         finally
         {
-            TemporaryVariables::set("ICMP Polling Running",0);
+            TemporaryVariables::set("ICMP Polling Running",null);
         }
     }
 }

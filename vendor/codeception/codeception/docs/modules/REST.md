@@ -86,6 +86,25 @@ $I->sendPOST('some-other-page.php');
 ```
 
  * `param string` $name the name of the header to delete.
+ * `[Part]` json
+ * `[Part]` xml
+
+
+### dontSeeBinaryResponseEquals
+ 
+Checks if the hash of a binary response is not the same as provided.
+
+```php
+<?php
+$I->dontSeeBinaryResponseEquals("8c90748342f19b195b9c6b4eff742ded");
+?>
+```
+Opposite to `seeBinaryResponseEquals`
+
+ * `param` $hash the hashed data response expected
+ * `param` $algo the hash algorithm to use. Default md5.
+ * `[Part]` json
+ * `[Part]` xml
 
 
 ### dontSeeHttpHeader
@@ -137,7 +156,15 @@ Opposite to seeResponseContainsJson
  
 Opposite to seeResponseJsonMatchesJsonPath
 
- * `param array` $jsonPath
+ * `param string` $jsonPath
+ * `[Part]` json
+
+
+### dontSeeResponseJsonMatchesXpath
+ 
+Opposite to seeResponseJsonMatchesXpath
+
+ * `param string` $xpath
  * `[Part]` json
 
 
@@ -146,7 +173,7 @@ Opposite to seeResponseJsonMatchesJsonPath
 Opposite to `seeResponseMatchesJsonType`.
 
  * `[Part]` json
- * `see`  seeResponseMatchesJsonType
+@see seeResponseMatchesJsonType
  * `param` $jsonType jsonType structure
  * `param null` $jsonPath optionally set specific path to structure with JsonPath
  * `Available since` 2.1.3
@@ -179,7 +206,7 @@ Checks wheather XML response does not match XPath
 
 ```php
 <?php
-$I->dontSeeXmlResponseMatchesXpath('//root/user[ * `id=1]');` 
+$I->dontSeeXmlResponseMatchesXpath('//root/user[@id=1]');
 ```
  * `[Part]` xml
  * `param` $xpath
@@ -201,8 +228,8 @@ Element is matched by either CSS or XPath
 Deprecated since 2.0.9 and removed since 2.1.0
 
  * `param` $path
- * `throws`  ModuleException
- * `deprecated` 
+@throws ModuleException
+@deprecated
 
 
 ### grabDataFromResponseByJsonPath
@@ -227,7 +254,7 @@ $I->sendPUT('/user', array('id' => $firstUserId[0], 'name' => 'davert'));
  * `param string` $jsonPath
  * `return` array Array of matching items
  * `Available since` 2.0.9
- * `throws`  \Exception
+@throws \Exception
  * `[Part]` json
 
 
@@ -285,6 +312,43 @@ $I->haveHttpHeader('Content-Type', 'application/json');
 
  * `param` $name
  * `param` $value
+ * `[Part]` json
+ * `[Part]` xml
+
+
+### seeBinaryResponseEquals
+ 
+Checks if the hash of a binary response is exactly the same as provided.
+Parameter can be passed as any hash string supported by hash(), with an
+optional second parameter to specify the hash type, which defaults to md5.
+
+Example: Using md5 hash key
+
+```php
+<?php
+$I->seeBinaryResponseEquals("8c90748342f19b195b9c6b4eff742ded");
+?>
+```
+
+Example: Using md5 for a file contents
+
+```php
+<?php
+$fileData = file_get_contents("test_file.jpg");
+$I->seeBinaryResponseEquals(md5($fileData));
+?>
+```
+Example: Using sha256 hsah
+
+```php
+<?php
+$fileData = '/9j/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/yQALCAABAAEBAREA/8wABgAQEAX/2gAIAQEAAD8A0s8g/9k='; // very small jpeg
+$I->seeBinaryResponseEquals(hash("sha256", base64_decode($fileData)), 'sha256');
+?>
+```
+
+ * `param` $hash the hashed data response expected
+ * `param` $algo the hash algorithm to use. Default md5.
  * `[Part]` json
  * `[Part]` xml
 
@@ -354,11 +418,11 @@ Examples:
 
 ``` php
 <?php
-// response: {name: john, email: john * `gmail.com}` 
+// response: {name: john, email: john@gmail.com}
 $I->seeResponseContainsJson(array('name' => 'john'));
 
-// response {user: john, profile: { email: john * `gmail.com`  }}
-$I->seeResponseContainsJson(array('email' => 'john * `gmail.com'));` 
+// response {user: john, profile: { email: john@gmail.com }}
+$I->seeResponseContainsJson(array('email' => 'john@gmail.com'));
 
 ?>
 ```
@@ -436,6 +500,7 @@ $I->seeResponseJsonMatchesJsonPath('$.store..price');
 ?>
 ```
 
+ * `param string` $jsonPath
  * `[Part]` json
  * `Available since` 2.0.9
 
@@ -478,6 +543,7 @@ $I->seeResponseJsonMatchesXpath('//store/book[1]/author');
 $I->seeResponseJsonMatchesXpath('/store//price');
 ?>
 ```
+ * `param string` $xpath
  * `[Part]` json
  * `Available since` 2.0.9
 
@@ -542,10 +608,10 @@ This is how filters can be used:
 
 ```php
 <?php
-// {'user_id': 1, 'email' => 'davert * `codeception.com'}` 
+// {'user_id': 1, 'email' => 'davert@codeception.com'}
 $I->seeResponseMatchesJsonType([
      'user_id' => 'string:>0:<1000', // multiple filters can be used
-     'email' => 'string:regex(~\ * `~)'`  // we just check that  * ``  char is included
+     'email' => 'string:regex(~\@~)' // we just check that @ char is included
 ]);
 
 // {'user_id': '1'}
@@ -599,7 +665,7 @@ Checks wheather XML response matches XPath
 
 ```php
 <?php
-$I->seeXmlResponseMatchesXpath('//root/user[ * `id=1]');` 
+$I->seeXmlResponseMatchesXpath('//root/user[@id=1]');
 ```
  * `[Part]` xml
  * `param` $xpath
@@ -643,9 +709,9 @@ Sends LINK request to given uri.
  * `param`       $url
  * `param array` $linkEntries (entry is array with keys "uri" and "link-param")
 
- * `link`  http://tools.ietf.org/html/rfc2068#section-19.6.2.4
+@link http://tools.ietf.org/html/rfc2068#section-19.6.2.4
 
- * `author`  samva.ua * `gmail.com` 
+@author samva.ua@gmail.com
  * `[Part]` json
  * `[Part]` xml
 
@@ -673,13 +739,35 @@ Sends PATCH request to given uri.
 
 ### sendPOST
  
-Sends a POST request to given uri.
+Sends a POST request to given uri. Parameters and files can be provided separately.
 
-Parameters and files (as array of filenames) can be provided.
+Example:
+```php
+<?php
+//simple POST call
+$I->sendPOST('/message', ['subject' => 'Read this!', 'to' => 'johndoe@example.com']);
+//simple upload method
+$I->sendPOST('/message/24', ['inline' => 0], ['attachmentFile' => codecept_data_dir('sample_file.pdf')]);
+//uploading a file with a custom name and mime-type. This is also useful to simulate upload errors.
+$I->sendPOST('/message/24', ['inline' => 0], [
+    'attachmentFile' => [
+         'name' => 'document.pdf',
+         'type' => 'application/pdf',
+         'error' => UPLOAD_ERR_OK,
+         'size' => filesize(codecept_data_dir('sample_file.pdf')),
+         'tmp_name' => codecept_data_dir('sample_file.pdf')
+    ]
+]);
+```
 
  * `param` $url
  * `param array|\JsonSerializable` $params
- * `param array` $files
+ * `param array` $files A list of filenames or "mocks" of $_FILES (each entry being an array with the following
+                    keys: name, type, error, size, tmp_name (pointing to the real file path). Each key works
+                    as the "name" attribute of a file input field.
+
+@see http://php.net/manual/en/features.file-upload.post-method.php
+@see codecept_data_dir()
  * `[Part]` json
  * `[Part]` xml
 
@@ -701,8 +789,8 @@ Sends UNLINK request to given uri.
 
  * `param`       $url
  * `param array` $linkEntries (entry is array with keys "uri" and "link-param")
- * `link`  http://tools.ietf.org/html/rfc2068#section-19.6.2.4
- * `author`  samva.ua * `gmail.com` 
+@link http://tools.ietf.org/html/rfc2068#section-19.6.2.4
+@author samva.ua@gmail.com
  * `[Part]` json
  * `[Part]` xml
 
@@ -732,4 +820,4 @@ $I->stopFollowingRedirects();
  * `[Part]` xml
  * `[Part]` json
 
-<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.2/src/Codeception/Module/REST.php">Help us to improve documentation. Edit module reference</a></div>
+<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.3/src/Codeception/Module/REST.php">Help us to improve documentation. Edit module reference</a></div>

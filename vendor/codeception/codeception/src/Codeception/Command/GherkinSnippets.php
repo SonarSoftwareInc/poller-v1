@@ -46,7 +46,7 @@ class GherkinSnippets extends Command
         $this->addStyles($output);
         $suite = $input->getArgument('suite');
         $test = $input->getArgument('test');
-        $config = $this->getSuiteConfig($suite, $input->getOption('config'));
+        $config = $this->getSuiteConfig($suite);
 
         $generator = new SnippetsGenerator($config, $test);
         $snippets = $generator->getSnippets();
@@ -67,6 +67,6 @@ class GherkinSnippets extends Command
         }
         $output->writeln("<info> ----------------------------------------- </info>");
         $output->writeln(sprintf(' <bold>%d</bold> snippets proposed', count($snippets)));
-        $output->writeln("<notice> Copy generated snippets to {$config['class_name']} or a specific Gherkin context </notice>");
+        $output->writeln("<notice> Copy generated snippets to {$config['actor']} or a specific Gherkin context </notice>");
     }
 }

@@ -14,19 +14,10 @@ use PhpAmqpLib\Exception\AMQPProtocolChannelException;
 /**
  * This module interacts with message broker software that implements
  * the Advanced Message Queuing Protocol (AMQP) standard. For example, RabbitMQ (tested).
- * Use it to cleanup the queue between tests.
  *
  * <div class="alert alert-info">
- * To use this module with Composer you need <em>"videlalvaro/php-amqplib": "*"</em> package.
+ * To use this module with Composer you need <em>"php-amqplib/php-amqplib": "~2.4"</em> package.
  * </div>
- *
- * ## Status
- * * Maintainer: **davert**, **tiger-seo**
- * * Stability: **alpha**
- * * Contact: codecept@davert.mail.ua
- * * Contact: tiger.seo@gmail.com
- *
- * *Please review the code of non-stable modules and provide patches if you have issues.*
  *
  * ## Config
  *
@@ -52,10 +43,6 @@ use PhpAmqpLib\Exception\AMQPProtocolChannelException;
  * ## Public Properties
  *
  * * connection - AMQPStreamConnection - current connection
- *
- * @since 1.1.2
- * @author tiger.seo@gmail.com
- * @author davert
  */
 class AMQP extends CodeceptionModule implements RequiresPackage
 {
@@ -119,9 +106,9 @@ class AMQP extends CodeceptionModule implements RequiresPackage
      * ?>
      * ```
      *
-     * @param $exchange
-     * @param $message string|AMQPMessage
-     * @param $routing_key
+     * @param string $exchange
+     * @param string|AMQPMessage $message
+     * @param string $routing_key
      */
     public function pushToExchange($exchange, $message, $routing_key = null)
     {
@@ -141,8 +128,8 @@ class AMQP extends CodeceptionModule implements RequiresPackage
      * ?>
      * ```
      *
-     * @param $queue
-     * @param $message string|AMQPMessage
+     * @param string $queue
+     * @param string|AMQPMessage $message
      */
     public function pushToQueue($queue, $message)
     {
@@ -152,6 +139,138 @@ class AMQP extends CodeceptionModule implements RequiresPackage
 
         $this->connection->channel()->queue_declare($queue);
         $this->connection->channel()->basic_publish($message, '', $queue);
+    }
+
+    /**
+     * Declares an exchange
+     *
+     * This is an alias of method `exchange_declare` of `PhpAmqpLib\Channel\AMQPChannel`.
+     *
+     * ```php
+     * <?php
+     * $I->declareExchange(
+     *     'nameOfMyExchange', // exchange name
+     *     'topic' // exchange type
+     * )
+     * ```
+     *
+     * @param string $exchange
+     * @param string $type
+     * @param bool $passive
+     * @param bool $durable
+     * @param bool $auto_delete
+     * @param bool $internal
+     * @param bool $nowait
+     * @param array $arguments
+     * @param int $ticket
+     * @return mixed|null
+     */
+    public function declareExchange(
+        $exchange,
+        $type,
+        $passive = false,
+        $durable = false,
+        $auto_delete = true,
+        $internal = false,
+        $nowait = false,
+        $arguments = null,
+        $ticket = null
+    ) {
+        return $this->connection->channel()->exchange_declare(
+            $exchange,
+            $type,
+            $passive,
+            $durable,
+            $auto_delete,
+            $internal,
+            $nowait,
+            $arguments,
+            $ticket
+        );
+    }
+
+    /**
+     * Declares queue, creates if needed
+     *
+     * This is an alias of method `queue_declare` of `PhpAmqpLib\Channel\AMQPChannel`.
+     *
+     * ```php
+     * <?php
+     * $I->declareQueue(
+     *     'nameOfMyQueue', // exchange name
+     * )
+     * ```
+     *
+     * @param string $queue
+     * @param bool $passive
+     * @param bool $durable
+     * @param bool $exclusive
+     * @param bool $auto_delete
+     * @param bool $nowait
+     * @param array $arguments
+     * @param int $ticket
+     * @return mixed|null
+     */
+    public function declareQueue(
+        $queue = '',
+        $passive = false,
+        $durable = false,
+        $exclusive = false,
+        $auto_delete = true,
+        $nowait = false,
+        $arguments = null,
+        $ticket = null
+    ) {
+        return $this->connection->channel()->queue_declare(
+            $queue,
+            $passive,
+            $durable,
+            $exclusive,
+            $auto_delete,
+            $nowait,
+            $arguments,
+            $ticket
+        );
+    }
+
+    /**
+     * Binds a queue to an exchange
+     *
+     * This is an alias of method `queue_bind` of `PhpAmqpLib\Channel\AMQPChannel`.
+     *
+     * ```php
+     * <?php
+     * $I->bindQueueToExchange(
+     *     'nameOfMyQueueToBind', // name of the queue
+     *     'transactionTracking.transaction', // exchange name to bind to
+     *     'your.routing.key' // Optionally, provide a binding key
+     * )
+     * ```
+     *
+     * @param string $queue
+     * @param string $exchange
+     * @param string $routing_key
+     * @param bool $nowait
+     * @param array $arguments
+     * @param int $ticket
+     * @return mixed|null
+     */
+    public function bindQueueToExchange(
+        $queue,
+        $exchange,
+        $routing_key = '',
+        $nowait = false,
+        $arguments = null,
+        $ticket = null
+    ) {
+        return $this->connection->channel()->queue_bind(
+            $queue,
+            $exchange,
+            $routing_key,
+            $nowait,
+            $arguments,
+            $ticket
+        );
     }
 
     /**
@@ -167,8 +286,8 @@ class AMQP extends CodeceptionModule implements RequiresPackage
      * ?>
      * ```
      *
-     * @param $queue
-     * @param $text
+     * @param string $queue
+     * @param string $text
      */
     public function seeMessageInQueueContainsText($queue, $text)
     {
@@ -186,9 +305,13 @@ class AMQP extends CodeceptionModule implements RequiresPackage
     /**
      * Takes last message from queue.
      *
+     * ``` php
+     * <?php
      * $message = $I->grabMessageFromQueue('queue.emails');
+     * ?>
+     * ```
      *
-     * @param $queue
+     * @param string $queue
      * @return AMQPMessage
      */
     public function grabMessageFromQueue($queue)
@@ -205,6 +328,8 @@ class AMQP extends CodeceptionModule implements RequiresPackage
      * $I->purgeQueue('queue.emails');
      * ?>
      * ```
+     *
+     * @param string $queueName
      */
     public function purgeQueue($queueName = '')
     {

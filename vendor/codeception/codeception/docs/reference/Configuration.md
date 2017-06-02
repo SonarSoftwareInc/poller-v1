@@ -48,7 +48,7 @@ settings:
     shuffle: true
 
     # by default it's false on Windows
-    # use [ANSICON](http://adoxa.110mb.com/ansicon/) to colorize output.
+    # use [ANSICON](https://github.com/adoxa/ansicon) to colorize output.
     colors: true
 
     # Generate XML JUnit report using strict schema
@@ -63,6 +63,23 @@ settings:
     # This value controls whether PHPUnit attempts to backup global variables
     # See https://phpunit.de/manual/current/en/appendixes.annotations.html#appendixes.annotations.backupGlobals
     backup_globals: true
+    
+    # PHPUnit can be strict about tests that do not test anything
+    # See https://phpunit.de/manual/current/en/risky-tests.html#risky-tests.useless-tests
+    report_useless_tests: false
+    
+    # PHPUnit can be strict about output during tests.
+    # See https://phpunit.de/manual/current/en/risky-tests.html#risky-tests.output-during-test-execution
+    disallow_test_output: false
+    
+    # PHPUnit can be strict about tests that manipulate global state.
+    # See https://phpunit.de/manual/current/en/risky-tests.html#risky-tests.global-state-manipulation
+    be_strict_about_changes_to_global_state: false
+    
+    # Log the incomplete and skipped tests into junit report
+    # See https://phpunit.de/manual/current/en/appendixes.configuration.html 
+    # Section logging > junit
+    log_incomplete_skipped: false
 ```
 
 * `modules`: allows to create shared module configuration for all included suites. By default sample configuration for Db module is included.
@@ -87,7 +104,7 @@ modules:
 
 Each generated suite have its own configuration inside directory set by `paths: tests: ` configuration option in `codeception.yml`. Each suite configuration is named like `suitename.suite.yml`. It allows to enable and configure modules, and more.
 
-* `class_name`: name of the actor class for current suite. 
+* `actor`: name of the actor class for current suite. 
 * `modules`: list of enabled modules with their configuration.
 
 ```yaml

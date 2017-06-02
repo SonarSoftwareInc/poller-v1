@@ -27,7 +27,7 @@ use yii\db\ActiveRecordInterface;
  * You can use this module by setting params in your functional.suite.yml:
  *
  * ```yaml
- * class_name: FunctionalTester
+ * actor: FunctionalTester
  * modules:
  *     enabled:
  *         - Yii2:
@@ -45,8 +45,8 @@ use yii\db\ActiveRecordInterface;
  *
  * ### Example (`functional.suite.yml`)
  *
- * ```yml
- * class_name: FunctionalTester
+ * ```yaml
+ * actor: FunctionalTester
  * modules:
  *   enabled:
  *      - Yii2:
@@ -55,8 +55,8 @@ use yii\db\ActiveRecordInterface;
  *
  * ### Example (`unit.suite.yml`)
  *
- * ```yml
- * class_name: UnitTester
+ * ```yaml
+ * actor: UnitTester
  * modules:
  *   enabled:
  *      - Asserts
@@ -67,8 +67,8 @@ use yii\db\ActiveRecordInterface;
  *
  * ### Example (`acceptance.suite.yml`)
  *
- * ```yml
- * class_name: AcceptanceTester
+ * ```yaml
+ * actor: AcceptanceTester
  * modules:
  *     enabled:
  *         - WebDriver:
@@ -101,6 +101,18 @@ use yii\db\ActiveRecordInterface;
  * {
  *     return ['posts' => PostsFixture::className()]
  * }
+ * ```
+ *
+ * ## URL
+ * This module provide to use native URL formats of Yii2 for all codeception commands that use url for work.
+ * This commands allows input like:
+ *
+ * ```php
+ * <?php
+ * $I->amOnPage(['site/view','page'=>'about']);
+ * $I->amOnPage('index-test.php?site/index');
+ * $I->amOnPage('http://localhost/index-test.php?site/index');
+ * $I->sendAjaxPostRequest(['/user/update', 'id' => 1], ['UserForm[name]' => 'G.Hopper');
  * ```
  *
  * ## Status
@@ -138,10 +150,10 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
 
     public function _initialize()
     {
-        if (!is_file(codecept_root_dir() . $this->config['configFile'])) {
+        if (!is_file(Configuration::projectDir() . $this->config['configFile'])) {
             throw new ModuleConfigException(
                 __CLASS__,
-                "The application config file does not exist: " . codecept_root_dir() . $this->config['configFile']
+                "The application config file does not exist: " . Configuration::projectDir() . $this->config['configFile']
             );
         }
         $this->defineConstants();
@@ -166,16 +178,35 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
         $this->app = $this->client->getApplication();
 
         // load fixtures before db transaction
-        if (method_exists($test, self::TEST_FIXTURES_METHOD)) {
-            $this->haveFixtures(call_user_func([$test, self::TEST_FIXTURES_METHOD]));
+        if ($test instanceof \Codeception\Test\Cest) {
+            $this->loadFixtures($test->getTestClass());
+        } else {
+            $this->loadFixtures($test);
         }
 
-        if ($this->config['cleanup'] && $this->app->has('db')) {
+        if ($this->config['cleanup']
+            && $this->app->has('db')
+            && $this->app->db instanceof \yii\db\Connection
+        ) {
             $this->transaction = $this->app->db->beginTransaction();
         }
     }
 
-    public function _after(\Codeception\TestInterface $test)
+    /**
+     * load fixtures before db transaction
+     *
+     * @param mixed $test instance of test class
+     */
+    private function loadFixtures($test)
+    {
+        if (empty($this->loadedFixtures)
+            && method_exists($test, self::TEST_FIXTURES_METHOD)
+        ) {
+            $this->haveFixtures(call_user_func([$test, self::TEST_FIXTURES_METHOD]));
+        }
+    }
+
+    public function _after(TestInterface $test)
     {
         $_SESSION = [];
         $_FILES = [];
@@ -184,15 +215,21 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
         $_COOKIE = [];
         $_REQUEST = [];
 
-        foreach ($this->loadedFixtures as $fixture) {
-            $fixture->unloadFixtures();
-        }
+        if ($this->config['cleanup']) {
+            foreach ($this->loadedFixtures as $fixture) {
+                $fixture->unloadFixtures();
+            }
+            $this->loadedFixtures = [];
 
-        if ($this->transaction && $this->config['cleanup']) {
-            $this->transaction->rollback();
+            if ($this->transaction) {
+                $this->transaction->rollback();
+            }
         }
+        
 
-        $this->client->resetPersistentVars();
+        if ($this->client) {
+            $this->client->resetPersistentVars();
+        }
 
         if (isset(\Yii::$app) && \Yii::$app->has('session', true)) {
             \Yii::$app->session->close();
@@ -250,14 +287,30 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
      *
      * ```php
      * <?php
-     * $I->haveFixtures(,
+     * $I->haveFixtures([
      *     'posts' => PostsFixture::className(),
      *     'user' => [
      *         'class' => UserFixture::className(),
-     *         'dataFile' => '@tests/_data/models/user.php'
+     *         'dataFile' => '@tests/_data/models/user.php',
      *      ],
-     * );
+     * ]);
      * ```
+     *
+     * Note: if you need to load fixtures before the test (probably before the cleanup transaction is started;
+     * `cleanup` options is `true` by default), you can specify fixtures with _fixtures method of a testcase
+     * ```php
+     * <?php
+     * // inside Cest file or Codeception\TestCase\Unit
+     * public function _fixtures(){
+     *     return [
+     *         'user' => [
+     *             'class' => UserFixture::className(),
+     *             'dataFile' => codecept_data_dir() . 'user.php'
+     *         ]
+     *     ];
+     * }
+     * ```
+     * instead of defining `haveFixtures` in Cest `_before`
      *
      * @param $fixtures
      * @part fixtures
@@ -268,6 +321,7 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
             return;
         }
         $fixturesStore = new Yii2Connector\FixturesStore($fixtures);
+        $fixturesStore->unloadFixtures();
         $fixturesStore->loadFixtures();
         $this->loadedFixtures[] = $fixturesStore;
     }
@@ -432,28 +486,6 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
     }
 
     /**
-     * Converting $page to valid Yii 2 URL
-     *
-     * Allows input like:
-     *
-     * ```php
-     * <?php
-     * $I->amOnPage(['site/view','page'=>'about']);
-     * $I->amOnPage('index-test.php?site/index');
-     * $I->amOnPage('http://localhost/index-test.php?site/index');
-     * ```
-     *
-     * @param $page string|array parameter for \yii\web\UrlManager::createUrl()
-     */
-    public function amOnPage($page)
-    {
-        if (is_array($page)) {
-            $page = Yii::$app->getUrlManager()->createUrl($page);
-        }
-        parent::amOnPage($page);
-    }
-
-    /**
      * Similar to amOnPage but accepts route as first argument and params as second
      *
      * ```
@@ -465,6 +497,26 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
     {
         array_unshift($params, $route);
         $this->amOnPage($params);
+    }
+
+    /**
+     * To support to use the behavior of urlManager component
+     * for the methods like this: amOnPage(), sendAjaxRequest() and etc.
+     * @param $method
+     * @param $uri
+     * @param array $parameters
+     * @param array $files
+     * @param array $server
+     * @param null $content
+     * @param bool $changeHistory
+     * @return mixed
+     */
+    protected function clientRequest($method, $uri, array $parameters = [], array $files = [], array $server = [], $content = null, $changeHistory = true)
+    {
+        if (is_array($uri)) {
+            $uri = Yii::$app->getUrlManager()->createUrl($uri);
+        }
+        return parent::clientRequest($method, $uri, $parameters, $files, $server, $content, $changeHistory);
     }
 
     /**
@@ -618,9 +670,5 @@ class Yii2 extends Framework implements ActiveRecord, PartedModule
         defined('YII_DEBUG') or define('YII_DEBUG', true);
         defined('YII_ENV') or define('YII_ENV', 'test');
         defined('YII_ENABLE_ERROR_HANDLER') or define('YII_ENABLE_ERROR_HANDLER', false);
-
-        if (YII_ENV !== 'test') {
-            Notification::warning("YII_ENV is not set to `test`, please add \n\n`define(\'YII_ENV\', \'test\');`\n\nto bootstrap file", 'Yii Framework');
-        }
     }
 }

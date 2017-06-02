@@ -37,7 +37,7 @@ class StepTest extends \PHPUnit_Framework_TestCase
     public function testGetHtml()
     {
         $step = $this->getStep(['Do some testing', ['arg1', 'arg2']]);
-        $this->assertSame('I do some testing <span style="color: #732E81">"arg1","arg2"</span>', $step->getHtml());
+        $this->assertSame('I do some testing <span style="color: #732E81">&quot;arg1&quot;,&quot;arg2&quot;</span>', $step->getHtml());
 
         $step = $this->getStep(['Do some testing', []]);
         $this->assertSame('I do some testing', $step->getHtml());
@@ -96,6 +96,16 @@ class StepTest extends \PHPUnit_Framework_TestCase
         $step = $this->getStep(['amOnUrl', ['http://www.example.org/test']]);
         $output = $step->toString(200);
         $this->assertEquals('am on url "http://www.example.org/test"', $output);
+    }
+
+    public function testNoArgs()
+    {
+        $step = $this->getStep(['acceptPopup', []]);
+        $output = $step->toString(200);
+        $this->assertEquals('accept popup ', $output);
+        $output = $step->toString(-5);
+        $this->assertEquals('accept popup ', $output);
+
     }
 
     public function testSeeMultiLineStringInSingleLine()

@@ -16,16 +16,27 @@ Please try it and leave your feedback.
 
 ## Config
 
-* cleanup: `boolean`, default `true` - all db queries will be run in transaction, which will be rolled back at the end of test.
-* bootstrap: `string`, default `bootstrap/app.php` - Relative path to app.php config file.
-* root: `string`, default `` - Root path of our application.
-* packages: `string`, default `workbench` - Root path of application packages (if any).
+* cleanup: `boolean`, default `true` - all database queries will be run in a transaction,
+  which will be rolled back at the end of each test.
+* bootstrap: `string`, default `bootstrap/app.php` - relative path to app.php config file.
+* root: `string`, default `` - root path of the application.
+* packages: `string`, default `workbench` - root path of application packages (if any).
+* url: `string`, default `http://localhost` - the application URL
 
 ## API
 
-* app - `Illuminate\Foundation\Application` instance
-* client - `BrowserKit` client
+* app - `\Laravel\Lumen\Application`
+* config - `array`
 
+## Parts
+
+* ORM - only include the database methods of this module:
+    * have
+    * haveMultiple
+    * haveRecord
+    * grabRecord
+    * seeRecord
+    * dontSeeRecord
 
 
 ## Actions
@@ -76,7 +87,7 @@ public function seeResponseContains($text)
 ```
 
  * `return` string
- * `throws`  ModuleException
+@throws ModuleException
 
 
 ### _loadPage
@@ -131,8 +142,8 @@ To load arbitrary page for interaction, use `_loadPage` method.
  * `param array` $server
  * `param null` $content
  * `return` mixed|Crawler
- * `throws`  ExternalUrlException
- * `see`  `_loadPage`
+@throws ExternalUrlException
+@see `_loadPage`
 
 
 ### _savePageSource
@@ -157,11 +168,10 @@ Authenticates user for HTTP_AUTH
 
 ### amLoggedAs
  
-Set the currently logged in user for the application.
-Takes either an object that implements the User interface or
-an array of credentials.
+Set the authenticated user for the next request.
+This will not persist between multiple requests.
 
- * `param`  \Illuminate\Contracts\Auth\User|array $user
+ * `param`  \Illuminate\Contracts\Auth\Authenticatable
  * `param`  string|null $driver The authentication driver for Lumen <= 5.1.*, guard name for Lumen >= 5.2
  * `return` void
 
@@ -202,7 +212,7 @@ Attaches a file relative to the Codeception data directory to the given file upl
 ``` php
 <?php
 // file is stored in 'tests/_data/prices.xls'
-$I->attachFile('input[ * `type="file"]',`  'prices.xls');
+$I->attachFile('input[@type="file"]', 'prices.xls');
 ?>
 ```
 
@@ -221,6 +231,18 @@ $I->checkOption('#agree');
 ```
 
  * `param` $option
+
+
+### clearApplicationHandlers
+ 
+Clear the registered application handlers.
+
+``` php
+<?php
+$I->clearApplicationHandlers();
+?>
+```
+
 
 
 ### click
@@ -244,7 +266,7 @@ $I->click('Submit');
 // CSS button
 $I->click('#form input[type=submit]');
 // XPath
-$I->click('//form/*[ * `type=submit]');` 
+$I->click('//form/*[@type=submit]');
 // link in context
 $I->click('Logout', '#nav');
 // using strict locator
@@ -282,9 +304,10 @@ Give a locator as the second parameter to match a specific region.
 
 ```php
 <?php
-$I->dontSee('Login');                    // I can suppose user is already logged in
-$I->dontSee('Sign Up','h1');             // I can suppose it's not a signup page
-$I->dontSee('Sign Up','//body/h1');      // with XPath
+$I->dontSee('Login');                         // I can suppose user is already logged in
+$I->dontSee('Sign Up','h1');                  // I can suppose it's not a signup page
+$I->dontSee('Sign Up','//body/h1');           // with XPath
+$I->dontSee('Sign Up', ['css' => 'body h1']); // with strict CSS locator
 ```
 
 Note that the search is done after stripping all HTML tags from the body,
@@ -307,7 +330,7 @@ For checking the raw source code, use `seeInSource()`.
 
 ### dontSeeAuthentication
  
-Check that user is not authenticated
+Check that user is not authenticated.
 
 
 ### dontSeeCheckboxIsChecked
@@ -405,7 +428,7 @@ $I->dontSeeInField('Body','Type your comment here');
 $I->dontSeeInField('form textarea[name=body]','Type your comment here');
 $I->dontSeeInField('form input[type=hidden]','hidden_value');
 $I->dontSeeInField('#searchform input','Search');
-$I->dontSeeInField('//form/*[ * `name=search]','Search');` 
+$I->dontSeeInField('//form/*[@name=search]','Search');
 $I->dontSeeInField(['name' => 'search'], 'Search');
 ?>
 ```
@@ -546,8 +569,8 @@ Fills a text field or textarea with the given string.
 
 ``` php
 <?php
-$I->fillField("//input[ * `type='text']",`  "Hello World!");
-$I->fillField(['name' => 'email'], 'jon * `mail.com');` 
+$I->fillField("//input[@type='text']", "Hello World!");
+$I->fillField(['name' => 'email'], 'jon@mail.com');
 ?>
 ```
 
@@ -631,6 +654,15 @@ $aLinks = $I->grabMultiple('a', 'href');
  * `return` string[]
 
 
+### grabPageSource
+ 
+Grabs current page source code.
+
+@throws ModuleException if no page was opened.
+
+ * `return` string Current page source code.
+
+
 ### grabRecord
  
 Retrieves record from database
@@ -698,6 +730,78 @@ $value = $I->grabTextFrom('~<input value=(.*?)]~sgi'); // match with a regex
  * `return` array|mixed|null|string
 
 
+### have
+ 
+Use Lumen's model factory to create a model.
+Can only be used with Lumen 5.1 and later.
+
+``` php
+<?php
+$I->have('App\User');
+$I->have('App\User', ['name' => 'John Doe']);
+$I->have('App\User', [], 'admin');
+?>
+```
+
+@see https://lumen.laravel.com/docs/master/testing#model-factories
+ * `param string` $model
+ * `param array` $attributes
+ * `param string` $name
+ * `[Part]` orm
+
+
+### haveApplicationHandler
+ 
+Register a handler than can be used to modify the Laravel application object after it is initialized.
+The Laravel application object will be passed as an argument to the handler.
+
+``` php
+<?php
+$I->haveApplicationHandler(function($app) {
+    $app->make('config')->set(['test_value' => '10']);
+});
+?>
+```
+
+ * `param` $handler
+
+
+### haveBinding
+ 
+Add a binding to the Laravel service container.
+(https://laravel.com/docs/master/container)
+
+``` php
+<?php
+$I->haveBinding('My\Interface', 'My\Implementation');
+?>
+```
+
+ * `param` $abstract
+ * `param` $concrete
+
+
+### haveContextualBinding
+ 
+Add a contextual binding to the Laravel service container.
+(https://laravel.com/docs/master/container)
+
+``` php
+<?php
+$I->haveContextualBinding('My\Class', '$variable', 'value');
+
+// This is similar to the following in your Laravel application
+$app->when('My\Class')
+    ->needs('$variable')
+    ->give('value');
+?>
+```
+
+ * `param` $concrete
+ * `param` $abstract
+ * `param` $implementation
+
+
 ### haveHttpHeader
  
 Sets the HTTP header to the passed value - which is used on
@@ -714,6 +818,42 @@ $I->amOnPage('test-headers.php');
  * `param string` $name the name of the request header
  * `param string` $value the value to set it to for subsequent
        requests
+
+
+### haveInstance
+ 
+Add an instance binding to the Laravel service container.
+(https://laravel.com/docs/master/container)
+
+``` php
+<?php
+$I->haveInstance('My\Class', new My\Class());
+?>
+```
+
+ * `param` $abstract
+ * `param` $instance
+
+
+### haveMultiple
+ 
+Use Laravel's model factory to create multiple models.
+Can only be used with Lumen 5.1 and later.
+
+``` php
+<?php
+$I->haveMultiple('App\User', 10);
+$I->haveMultiple('App\User', 10, ['name' => 'John Doe']);
+$I->haveMultiple('App\User', 10, [], 'admin');
+?>
+```
+
+@see https://lumen.laravel.com/docs/master/testing#model-factories
+ * `param string` $model
+ * `param int` $times
+ * `param array` $attributes
+ * `param string` $name
+ * `[Part]` orm
 
 
 ### haveRecord
@@ -735,9 +875,19 @@ $user = $I->haveRecord('App\User', array('name' => 'Davert')); // returns Eloque
  * `[Part]` orm
 
 
-### logout
+### haveSingleton
  
-Logs user out
+Add a singleton binding to the Laravel service container.
+(https://laravel.com/docs/master/container)
+
+``` php
+<?php
+$I->haveSingleton('My\Interface', 'My\Singleton');
+?>
+```
+
+ * `param` $abstract
+ * `param` $concrete
 
 
 ### moveBack
@@ -766,9 +916,10 @@ parameter to only search within that element.
 
 ``` php
 <?php
-$I->see('Logout');                 // I can suppose user is logged in
-$I->see('Sign Up', 'h1');          // I can suppose it's a signup page
-$I->see('Sign Up', '//body/h1');   // with XPath
+$I->see('Logout');                        // I can suppose user is logged in
+$I->see('Sign Up', 'h1');                 // I can suppose it's a signup page
+$I->see('Sign Up', '//body/h1');          // with XPath
+$I->see('Sign Up', ['css' => 'body h1']); // with strict CSS locator
 ```
 
 Note that the search is done after stripping all HTML tags from the body,
@@ -791,7 +942,7 @@ For checking the raw source code, use `seeInSource()`.
 
 ### seeAuthentication
  
-Checks that user is authenticated
+Checks that user is authenticated.
 
 
 ### seeCheckboxIsChecked
@@ -802,7 +953,7 @@ Checks that the specified checkbox is checked.
 <?php
 $I->seeCheckboxIsChecked('#agree'); // I suppose user agreed to terms
 $I->seeCheckboxIsChecked('#signup_form input[type=checkbox]'); // I suppose user agreed to terms, If there is only one checkbox in form.
-$I->seeCheckboxIsChecked('//form/input[ * `type=checkbox`  and  * `name=agree]');` 
+$I->seeCheckboxIsChecked('//form/input[@type=checkbox and @name=agree]');
 ?>
 ```
 
@@ -872,7 +1023,7 @@ $I->seeElement(['css' => 'form input'], ['name' => 'login']);
 
  * `param` $selector
  * `param array` $attributes
- * `return` 
+@return
 
 
 ### seeInCurrentUrl
@@ -902,7 +1053,7 @@ $I->seeInField('Body','Type your comment here');
 $I->seeInField('form textarea[name=body]','Type your comment here');
 $I->seeInField('form input[type=hidden]','hidden_value');
 $I->seeInField('#searchform input','Search');
-$I->seeInField('//form/*[ * `name=search]','Search');` 
+$I->seeInField('//form/*[@name=search]','Search');
 $I->seeInField(['name' => 'search'], 'Search');
 ?>
 ```
@@ -964,23 +1115,14 @@ $form = [
      'checkbox1' => true,
      // ...
 ];
-$I->submitForm('//form[ * `id=my-form]',`  $form, 'submitButton');
+$I->submitForm('//form[@id=my-form]', $form, 'submitButton');
 // $I->amOnPage('/path/to/form-page') may be needed
-$I->seeInFormFields('//form[ * `id=my-form]',`  $form);
+$I->seeInFormFields('//form[@id=my-form]', $form);
 ?>
 ```
 
  * `param` $formSelector
  * `param` $params
-
-
-### seeInSession
- 
-Assert that the session has a given list of values.
-
- * `param`  string|array $key
- * `param`  mixed $value
- * `return` void
 
 
 ### seeInSource
@@ -1094,14 +1236,6 @@ $I->seeResponseCodeIs(\Codeception\Util\HttpCode::OK);
  * `param` $code
 
 
-### seeSessionHasValues
- 
-Assert that the session has a given list of values.
-
- * `param`  array $bindings
- * `return` void
-
-
 ### selectOption
  
 Selects an option in a select tag or in radio button group.
@@ -1110,7 +1244,7 @@ Selects an option in a select tag or in radio button group.
 <?php
 $I->selectOption('form select[name=account]', 'Premium');
 $I->selectOption('form input[name=payment]', 'Monthly');
-$I->selectOption('//form/select[ * `name=account]',`  'Monthly');
+$I->selectOption('//form/select[@name=account]', 'Monthly');
 ?>
 ```
 
@@ -1186,6 +1320,11 @@ $I->sendAjaxRequest('PUT', '/posts/7', array('title' => 'new title'));
  * `param` $method
  * `param` $uri
  * `param` $params
+
+
+### setApplication
+ 
+ * `param \Laravel\Lumen\Application` $app
 
 
 ### setCookie
@@ -1408,4 +1547,4 @@ $I->uncheckOption('#notify');
 
  * `param` $option
 
-<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.2/src/Codeception/Module/Lumen.php">Help us to improve documentation. Edit module reference</a></div>
+<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.3/src/Codeception/Module/Lumen.php">Help us to improve documentation. Edit module reference</a></div>

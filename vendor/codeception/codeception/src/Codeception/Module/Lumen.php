@@ -2,13 +2,14 @@
 namespace Codeception\Module;
 
 use Codeception\Configuration;
-use Codeception\Exception\ModuleConfig;
+use Codeception\Exception\ModuleException;
+use Codeception\Exception\ModuleConfigException;
 use Codeception\Lib\Connector\Lumen as LumenConnector;
 use Codeception\Lib\Framework;
 use Codeception\Lib\Interfaces\ActiveRecord;
 use Codeception\Lib\Interfaces\PartedModule;
+use Codeception\Lib\Shared\LaravelCommon;
 use Codeception\Lib\ModuleContainer;
-use Codeception\Step;
 use Codeception\TestInterface;
 use Codeception\Util\ReflectionHelper;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -54,6 +55,8 @@ use Illuminate\Database\Eloquent\Model as EloquentModel;
  */
 class Lumen extends Framework implements ActiveRecord, PartedModule
 {
+    use LaravelCommon;
+
     /**
      * @var \Laravel\Lumen\Application
      */
@@ -113,7 +116,7 @@ class Lumen extends Framework implements ActiveRecord, PartedModule
      * Before hook.
      *
      * @param \Codeception\TestInterface $test
-     * @throws ModuleConfig
+     * @throws ModuleConfigException
      */
     public function _before(TestInterface $test)
     {
@@ -144,14 +147,14 @@ class Lumen extends Framework implements ActiveRecord, PartedModule
     /**
      * Make sure the Lumen bootstrap file exists.
      *
-     * @throws ModuleConfig
+     * @throws ModuleConfigException
      */
     protected function checkBootstrapFileExists()
     {
         $bootstrapFile = $this->config['bootstrap_file'];
 
         if (!file_exists($bootstrapFile)) {
-            throw new ModuleConfig(
+            throw new ModuleConfigException(
                 $this->module,
                 "Lumen bootstrap file not found in $bootstrapFile.\n"
                 . "Please provide a valid path using the 'bootstrap' config param. "

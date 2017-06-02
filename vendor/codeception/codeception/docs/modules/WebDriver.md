@@ -7,27 +7,30 @@ New generation Selenium WebDriver module.
 
 ### Selenium
 
-1. Download [Selenium Server](http://docs.seleniumhq.org/download/)
-2. Launch the daemon: `java -jar selenium-server-standalone-2.xx.xxx.jar`
-3. Configure this module (in acceptance.suite.yml) by setting url and browser:
+To run Selenium Server you need [Java](https://www.java.com/) as well as Chrome or Firefox browser installed.
+
+1. Download [Selenium Standalone Server](http://docs.seleniumhq.org/download/)
+2. To use Chrome, install [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/getting-started). To use Firefox, install [GeckoDriver](https://github.com/mozilla/geckodriver).
+3. Launch the Selenium Server: `java -jar selenium-server-standalone-3.xx.xxx.jar`. To locate Chromedriver binary use `-Dwebdriver.chrome.driver=./chromedriver` option. For Geckodriver use `-Dwebdriver.gecko.driver=./geckodriver`.
+4. Configure this module (in `acceptance.suite.yml`) by setting `url` and `browser`:
 
 ```yaml
     modules:
        enabled:
           - WebDriver:
              url: 'http://localhost/'
-             browser: firefox
+             browser: chrome # 'chrome' or 'firefox'
 ```
 
 ### PhantomJS
 
-PhantomJS is a headless alternative to Selenium Server that implements
+PhantomJS is a [headless browser](https://en.wikipedia.org/wiki/Headless_browser) alternative to Selenium Server that implements
 [the WebDriver protocol](https://code.google.com/p/selenium/wiki/JsonWireProtocol).
 It allows you to run Selenium tests on a server without a GUI installed.
 
 1. Download [PhantomJS](http://phantomjs.org/download.html)
 2. Run PhantomJS in WebDriver mode: `phantomjs --webdriver=4444`
-3. Configure this module (in acceptance.suite.yml) by setting url and `phantomjs` as browser:
+3. Configure this module (in `acceptance.suite.yml`) by setting url and `phantomjs` as browser:
 
 ```yaml
     modules:
@@ -36,6 +39,19 @@ It allows you to run Selenium tests on a server without a GUI installed.
              url: 'http://localhost/'
              browser: phantomjs
 ```
+
+Since PhantomJS doesn't give you any visual feedback, it's probably a good idea to install [Codeception\Extension\Recorder](http://codeception.com/extensions#CodeceptionExtensionRecorder) which gives you screenshots of how PhantomJS "sees" your pages.
+
+### Headless Selenium in Docker
+
+Docker can ship Selenium Server with all its dependencies and browsers inside a single container.
+Running tests inside Docker is as easy as pulling [official selenium image](https://github.com/SeleniumHQ/docker-selenium) and starting a container with Chrome:
+
+```
+docker run --net=host selenium/standalone-chrome
+```
+
+By using `--net=host` we allow selenium to access local websites.
 
 ## Cloud Testing
 
@@ -107,16 +123,18 @@ you should use a tunnel application provided by a service.
 * `browser` *required* - Browser to launch.
 * `host` - Selenium server host (127.0.0.1 by default).
 * `port` - Selenium server port (4444 by default).
-* `restart` - Set to false (default) to share browser session between tests, or set to true to create a separate session for each test.
+* `restart` - Set to `false` (default) to use the same browser window for all tests, or set to `true` to create a new window for each test. In any case, when all tests are finished the browser window is closed.
 * `window_size` - Initial window size. Set to `maximize` or a dimension in the format `640x480`.
 * `clear_cookies` - Set to false to keep cookies, or set to true (default) to delete all cookies between tests.
 * `wait` - Implicit wait (default 0 seconds).
-* `capabilities` - Sets Selenium2 [desired capabilities](https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities). Should be a key-value array.
+* `capabilities` - Sets Selenium [desired capabilities](https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities). Should be a key-value array.
 * `connection_timeout` - timeout for opening a connection to remote selenium server (30 seconds by default).
 * `request_timeout` - timeout for a request to return something from remote selenium server (30 seconds by default).
+* `pageload_timeout` - amount of time to wait for a page load to complete before throwing an error (default 0 seconds).
 * `http_proxy` - sets http proxy server url for testing a remote server.
 * `http_proxy_port` - sets http proxy server port
 * `debug_log_entries` - how many selenium entries to print with `debugWebDriverLogs` or on fail (15 by default).
+* `log_js_errors` - Set to true to include possible JavaScript to HTML report, or set to false (default) to deactivate.
 
 Example (`acceptance.suite.yml`)
 
@@ -131,11 +149,6 @@ Example (`acceptance.suite.yml`)
                  unexpectedAlertBehaviour: 'accept'
                  firefox_profile: '~/firefox-profiles/codeception-profile.zip.b64'
 ```
-
-### Status
-
-Stability: **stable**
-Based on [facebook php-webdriver](https://github.com/facebook/php-webdriver)
 
 ## Usage
 
@@ -190,6 +203,32 @@ $this->getModule('WebDriver')->webDriver->getKeyboard()->sendKeys('hello, webdri
 
 ## Actions
 
+### _findClickable
+
+*hidden API method, expected to be used from Helper classes*
+ 
+Locates a clickable element.
+
+Use it in Helpers or GroupObject or Extension classes:
+
+```php
+<?php
+$module = $this->getModule('WebDriver');
+$page = $module->webDriver;
+
+// search a link or button on a page
+$el = $module->_findClickable($page, 'Click Me');
+
+// search a link or button within an element
+$topBar = $module->_findElements('.top-bar')[0];
+$el = $module->_findClickable($topBar, 'Click Me');
+
+```
+ * `param` $page WebDriver instance or an element to search within
+ * `param` $link a link text or locator to click
+ * `return` WebDriverElement
+
+
 ### _findElements
 
 *hidden API method, expected to be used from Helper classes*
@@ -224,7 +263,7 @@ PhpBrowser and Framework modules return `Symfony\Component\DomCrawler\Crawler` i
  
 Uri of currently opened page.
  * `return` string
- * `throws`  ModuleException
+@throws ModuleException
 
 
 ### _getUrl
@@ -232,7 +271,24 @@ Uri of currently opened page.
 *hidden API method, expected to be used from Helper classes*
  
 Returns URL of a host.
- * `throws`  ModuleConfigException
+@throws ModuleConfigException
+
+
+### _restart
+
+*hidden API method, expected to be used from Helper classes*
+ 
+Restarts a web browser.
+Can be used with `_reconfigure` to open browser with different configuration
+
+```php
+<?php
+// inside a Helper
+$this->getModule('WebDriver')->_restart(); // just restart
+$this->getModule('WebDriver')->_restart(['browser' => $browser]); // reconfigure + restart
+```
+
+ * `param array` $config
 
 
 ### _savePageSource
@@ -324,7 +380,7 @@ $I->appendField('#myTextField', 'appended');
 
  * `param string` $field
  * `param string` $value
- * `throws`  \Codeception\Exception\ElementNotFound
+@throws \Codeception\Exception\ElementNotFound
 
 
 ### attachFile
@@ -334,7 +390,7 @@ Attaches a file relative to the Codeception data directory to the given file upl
 ``` php
 <?php
 // file is stored in 'tests/_data/prices.xls'
-$I->attachFile('input[ * `type="file"]',`  'prices.xls');
+$I->attachFile('input[@type="file"]', 'prices.xls');
 ?>
 ```
 
@@ -381,7 +437,7 @@ $I->click('Submit');
 // CSS button
 $I->click('#form input[type=submit]');
 // XPath
-$I->click('//form/*[ * `type=submit]');` 
+$I->click('//form/*[@type=submit]');
 // link in context
 $I->click('Logout', '#nav');
 // using strict locator
@@ -393,17 +449,69 @@ $I->click(['link' => 'Login']);
  * `param` $context
 
 
+### clickWithLeftButton
+ 
+Performs click with the left mouse button on an element.
+If the first parameter `null` then the offset is relative to the actual mouse position.
+If the second and third parameters are given,
+then the mouse is moved to an offset of the element's top-left corner.
+Otherwise, the mouse is moved to the center of the element.
+
+``` php
+<?php
+$I->clickWithLeftButton(['css' => '.checkout']);
+$I->clickWithLeftButton(null, 20, 50);
+$I->clickWithLeftButton(['css' => '.checkout'], 20, 50);
+?>
+```
+
+ * `param string` $cssOrXPath css or xpath of the web element (body by default).
+ * `param int` $offsetX
+ * `param int` $offsetY
+
+@throws \Codeception\Exception\ElementNotFound
+
+
 ### clickWithRightButton
  
 Performs contextual click with the right mouse button on an element.
+If the first parameter `null` then the offset is relative to the actual mouse position.
+If the second and third parameters are given,
+then the mouse is moved to an offset of the element's top-left corner.
+Otherwise, the mouse is moved to the center of the element.
 
- * `param` $cssOrXPath
- * `throws`  \Codeception\Exception\ElementNotFound
+``` php
+<?php
+$I->clickWithRightButton(['css' => '.checkout']);
+$I->clickWithRightButton(null, 20, 50);
+$I->clickWithRightButton(['css' => '.checkout'], 20, 50);
+?>
+```
+
+ * `param string` $cssOrXPath css or xpath of the web element (body by default).
+ * `param int`    $offsetX
+ * `param int`    $offsetY
+
+@throws \Codeception\Exception\ElementNotFound
+
+
+### closeTab
+ 
+Closes current browser tab and switches to previous active tab.
+
+```php
+<?php
+$I->closeTab();
+```
+
+Can't be used with PhantomJS
 
 
 ### debugWebDriverLogs
  
 Print out latest Selenium Logs in debug mode
+
+ * `param TestInterface` $test
 
 
 ### dontSee
@@ -413,9 +521,10 @@ Give a locator as the second parameter to match a specific region.
 
 ```php
 <?php
-$I->dontSee('Login');                    // I can suppose user is already logged in
-$I->dontSee('Sign Up','h1');             // I can suppose it's not a signup page
-$I->dontSee('Sign Up','//body/h1');      // with XPath
+$I->dontSee('Login');                         // I can suppose user is already logged in
+$I->dontSee('Sign Up','h1');                  // I can suppose it's not a signup page
+$I->dontSee('Sign Up','//body/h1');           // with XPath
+$I->dontSee('Sign Up', ['css' => 'body h1']); // with strict CSS locator
 ```
 
 Note that the search is done after stripping all HTML tags from the body,
@@ -512,6 +621,7 @@ $I->dontSeeElement('input', ['value' => '123456']);
 Opposite of `seeElementInDOM`.
 
  * `param` $selector
+ * `param array` $attributes
 
 
 ### dontSeeInCurrentUrl
@@ -538,7 +648,7 @@ $I->dontSeeInField('Body','Type your comment here');
 $I->dontSeeInField('form textarea[name=body]','Type your comment here');
 $I->dontSeeInField('form input[type=hidden]','hidden_value');
 $I->dontSeeInField('#searchform input','Search');
-$I->dontSeeInField('//form/*[ * `name=search]','Search');` 
+$I->dontSeeInField('//form/*[@name=search]','Search');
 $I->dontSeeInField(['name' => 'search'], 'Search');
 ?>
 ```
@@ -654,7 +764,7 @@ $I->dontSeeOptionIsSelected('#form input[name=payment]', 'Visa');
 Performs a double-click on an element matched by CSS or XPath.
 
  * `param` $cssOrXPath
- * `throws`  \Codeception\Exception\ElementNotFound
+@throws \Codeception\Exception\ElementNotFound
 
 
 ### dragAndDrop
@@ -711,20 +821,13 @@ Fills a text field or textarea with the given string.
 
 ``` php
 <?php
-$I->fillField("//input[ * `type='text']",`  "Hello World!");
-$I->fillField(['name' => 'email'], 'jon * `mail.com');` 
+$I->fillField("//input[@type='text']", "Hello World!");
+$I->fillField(['name' => 'email'], 'jon@mail.com');
 ?>
 ```
 
  * `param` $field
  * `param` $value
-
-
-### getVisibleText
- 
-Grabs all visible text from the current page.
-
- * `return` string
 
 
 ### grabAttributeFrom
@@ -796,6 +899,15 @@ $aLinks = $I->grabMultiple('a', 'href');
  * `return` string[]
 
 
+### grabPageSource
+ 
+Grabs current page source code.
+
+@throws ModuleException if no page was opened.
+
+ * `return` string Current page source code.
+
+
 ### grabTextFrom
  
 Finds and returns the text contents of the given element.
@@ -823,7 +935,7 @@ If a fuzzy locator is used, the field is found by field name, CSS, and XPath.
 <?php
 $name = $I->grabValueFrom('Name');
 $name = $I->grabValueFrom('input[name=username]');
-$name = $I->grabValueFrom('descendant-or-self::form/descendant::input[ * `name`  = 'username']');
+$name = $I->grabValueFrom('descendant-or-self::form/descendant::input[@name = 'username']');
 $name = $I->grabValueFrom(['name' => 'username']);
 ?>
 ```
@@ -871,12 +983,15 @@ Moves forward in history.
 ### moveMouseOver
  
 Move mouse over the first element matched by the given locator.
+If the first parameter null then the page is used.
 If the second and third parameters are given,
 then the mouse is moved to an offset of the element's top-left corner.
 Otherwise, the mouse is moved to the center of the element.
 
 ``` php
 <?php
+$I->moveMouseOver(['css' => '.checkout']);
+$I->moveMouseOver(null, 20, 50);
 $I->moveMouseOver(['css' => '.checkout'], 20, 50);
 ?>
 ```
@@ -885,7 +1000,22 @@ $I->moveMouseOver(['css' => '.checkout'], 20, 50);
  * `param int` $offsetX
  * `param int` $offsetY
 
- * `throws`  \Codeception\Exception\ElementNotFound
+@throws \Codeception\Exception\ElementNotFound
+
+
+### openNewTab
+ 
+Opens a new browser tab (wherever it is possible) and switches to it.
+
+```php
+<?php
+$I->openNewTab();
+```
+Tab is opened by using `window.open` javascript in a browser.
+Please note, that adblock can restrict creating such tabs.
+
+Can't be used with PhantomJS
+
 
 
 ### pauseExecution
@@ -895,6 +1025,51 @@ To proceed test press "ENTER" in console.
 
 This method is useful while writing tests,
 since it allows you to inspect the current page in the middle of a test case.
+
+
+### performOn
+ 
+Waits for element and runs a sequence of actions inside its context.
+Actions can be defined with array, callback, or `Codeception\Util\ActionSequence` instance.
+
+Actions as array are recommended for simple to combine "waitForElement" with assertions;
+`waitForElement($el)` and `see('text', $el)` can be simplified to:
+
+```php
+<?php
+$I->performOn($el, ['see' => 'text']);
+```
+
+List of actions can be pragmatically build using `Codeception\Util\ActionSequence`:
+
+```php
+<?php
+$I->performOn('.model', ActionSequence::build()
+    ->see('Warning')
+    ->see('Are you sure you want to delete this?')
+    ->click('Yes')
+);
+```
+
+Actions executed from array or ActionSequence will print debug output for actions, and adds an action name to
+exception on failure.
+
+Whenever you need to define more actions a callback can be used. A WebDriver module is passed for argument:
+
+```php
+<?php
+$I->performOn('.rememberMe', function (WebDriver $I) {
+     $I->see('Remember me next time');
+     $I->seeElement('#LoginForm_rememberMe');
+     $I->dontSee('Login');
+});
+```
+
+In 3rd argument you can set number a seconds to wait for element to appear
+
+ * `param` $element
+ * `param` $actions
+ * `param int` $timeout
 
 
 ### pressKey
@@ -910,14 +1085,14 @@ For special keys use key constants from WebDriverKeys class.
 $I->pressKey('#page','a'); // => olda
 $I->pressKey('#page',array('ctrl','a'),'new'); //=> new
 $I->pressKey('#page',array('shift','111'),'1','x'); //=> old!!!1x
-$I->pressKey('descendant-or-self::*[ * `id='page']','u');`  //=> oldu
+$I->pressKey('descendant-or-self::*[@id='page']','u'); //=> oldu
 $I->pressKey('#name', array('ctrl', 'a'), \Facebook\WebDriver\WebDriverKeys::DELETE); //=>''
 ?>
 ```
 
  * `param` $element
- * `param` $char Can be char or array with modifier. You can provide several chars.
- * `throws`  \Codeception\Exception\ElementNotFound
+ * `param` $char string|array Can be char or array with modifier. You can provide several chars.
+@throws \Codeception\Exception\ElementNotFound
 
 
 ### reloadPage
@@ -980,9 +1155,10 @@ parameter to only search within that element.
 
 ``` php
 <?php
-$I->see('Logout');                 // I can suppose user is logged in
-$I->see('Sign Up', 'h1');          // I can suppose it's a signup page
-$I->see('Sign Up', '//body/h1');   // with XPath
+$I->see('Logout');                        // I can suppose user is logged in
+$I->see('Sign Up', 'h1');                 // I can suppose it's a signup page
+$I->see('Sign Up', '//body/h1');          // with XPath
+$I->see('Sign Up', ['css' => 'body h1']); // with strict CSS locator
 ```
 
 Note that the search is done after stripping all HTML tags from the body,
@@ -1011,7 +1187,7 @@ Checks that the specified checkbox is checked.
 <?php
 $I->seeCheckboxIsChecked('#agree'); // I suppose user agreed to terms
 $I->seeCheckboxIsChecked('#signup_form input[type=checkbox]'); // I suppose user agreed to terms, If there is only one checkbox in form.
-$I->seeCheckboxIsChecked('//form/input[ * `type=checkbox`  and  * `name=agree]');` 
+$I->seeCheckboxIsChecked('//form/input[@type=checkbox and @name=agree]');
 ?>
 ```
 
@@ -1081,7 +1257,7 @@ $I->seeElement(['css' => 'form input'], ['name' => 'login']);
 
  * `param` $selector
  * `param array` $attributes
- * `return` 
+@return
 
 
 ### seeElementInDOM
@@ -1095,6 +1271,7 @@ $I->seeElementInDOM('//form/input[type=hidden]');
 ```
 
  * `param` $selector
+ * `param array` $attributes
 
 
 ### seeInCurrentUrl
@@ -1124,7 +1301,7 @@ $I->seeInField('Body','Type your comment here');
 $I->seeInField('form textarea[name=body]','Type your comment here');
 $I->seeInField('form input[type=hidden]','hidden_value');
 $I->seeInField('#searchform input','Search');
-$I->seeInField('//form/*[ * `name=search]','Search');` 
+$I->seeInField('//form/*[@name=search]','Search');
 $I->seeInField(['name' => 'search'], 'Search');
 ?>
 ```
@@ -1186,9 +1363,9 @@ $form = [
      'checkbox1' => true,
      // ...
 ];
-$I->submitForm('//form[ * `id=my-form]',`  $form, 'submitButton');
+$I->submitForm('//form[@id=my-form]', $form, 'submitButton');
 // $I->amOnPage('/path/to/form-page') may be needed
-$I->seeInFormFields('//form[ * `id=my-form]',`  $form);
+$I->seeInFormFields('//form[@id=my-form]', $form);
 ?>
 ```
 
@@ -1214,6 +1391,8 @@ Checks that the active JavaScript popup,
 as created by `window.alert`|`window.confirm`|`window.prompt`, contains the given string.
 
  * `param` $text
+
+@throws \Codeception\Exception\ModuleException
 
 
 ### seeInSource
@@ -1302,7 +1481,7 @@ Selects an option in a select tag or in radio button group.
 <?php
 $I->selectOption('form select[name=account]', 'Premium');
 $I->selectOption('form input[name=payment]', 'Monthly');
-$I->selectOption('//form/select[ * `name=account]',`  'Monthly');
+$I->selectOption('//form/select[@name=account]', 'Monthly');
 ?>
 ```
 
@@ -1425,9 +1604,9 @@ $form = [
      'checkbox1' => true,
      // ...
 ];
-$I->submitForm('//form[ * `id=my-form]',`  $form, 'submitButton');
+$I->submitForm('//form[@id=my-form]', $form, 'submitButton');
 // $I->amOnPage('/path/to/form-page') may be needed
-$I->seeInFormFields('//form[ * `id=my-form]',`  $form);
+$I->seeInFormFields('//form[@id=my-form]', $form);
 ?>
 ```
 
@@ -1482,6 +1661,24 @@ $I->submitForm('#my-form', [
     ]
 ]);
 ```
+
+The `$button` parameter can be either a string, an array or an instance
+of Facebook\WebDriver\WebDriverBy. When it is a string, the
+button will be found by its "name" attribute. If $button is an
+array then it will be treated as a strict selector and a WebDriverBy
+will be used verbatim.
+
+For example, given the following HTML:
+
+``` html
+<input type="submit" name="submitButton" value="Submit" />
+```
+
+`$button` could be any one of the following:
+  - 'submitButton'
+  - ['name' => 'submitButton']
+  - WebDriverBy::name('submitButton')
+
  * `param` $selector
  * `param` $params
  * `param` $button
@@ -1509,6 +1706,42 @@ $I->switchToIFrame();
  * `param string|null` $name
 
 
+### switchToNextTab
+ 
+Switches to next browser tab.
+An offset can be specified.
+
+```php
+<?php
+// switch to next tab
+$I->switchToNextTab();
+// switch to 2nd next tab
+$I->switchToNextTab(2);
+```
+
+Can't be used with PhantomJS
+
+ * `param int` $offset 1
+
+
+### switchToPreviousTab
+ 
+Switches to next browser tab.
+An offset can be specified.
+
+```php
+<?php
+// switch to previous tab
+$I->switchToNextTab();
+// switch to 2nd previous tab
+$I->switchToNextTab(-2);
+```
+
+Can't be used with PhantomJS
+
+ * `param int` $offset 1
+
+
 ### switchToWindow
  
 Switch to another window identified by name.
@@ -1530,7 +1763,9 @@ $I->switchToWindow();
 ?>
 ```
 
-If the window has no name, the only way to access it is via the `executeInSelenium()` method, like so:
+If the window has no name, match it by switching to next active tab using `switchToNextTab` method.
+
+Or use native Selenium functions to get access to all opened windows:
 
 ``` php
 <?php
@@ -1551,6 +1786,8 @@ Enters text into a native JavaScript prompt popup, as created by `window.prompt`
 
  * `param` $keys
 
+@throws \Codeception\Exception\ModuleException
+
 
 ### uncheckOption
  
@@ -1566,7 +1803,11 @@ $I->uncheckOption('#notify');
 
 
 ### unselectOption
-__not documented__
+ 
+Unselect an option in the given select box.
+
+ * `param` $select
+ * `param` $option
 
 
 ### wait
@@ -1574,7 +1815,7 @@ __not documented__
 Wait for $timeout seconds.
 
  * `param int` $timeout secs
- * `throws`  \Codeception\Exception\TestRuntimeException
+@throws \Codeception\Exception\TestRuntimeException
 
 
 ### waitForElement
@@ -1591,7 +1832,7 @@ $I->click('#agree_button');
 
  * `param` $element
  * `param int` $timeout seconds
- * `throws`  \Exception
+@throws \Exception
 
 
 ### waitForElementChange
@@ -1612,7 +1853,7 @@ $I->waitForElementChange('#menu', function(WebDriverElement $el) {
  * `param` $element
  * `param \Closure` $callback
  * `param int` $timeout seconds
- * `throws`  \Codeception\Exception\ElementNotFound
+@throws \Codeception\Exception\ElementNotFound
 
 
 ### waitForElementNotVisible
@@ -1628,7 +1869,7 @@ $I->waitForElementNotVisible('#agree_button', 30); // secs
 
  * `param` $element
  * `param int` $timeout seconds
- * `throws`  \Exception
+@throws \Exception
 
 
 ### waitForElementVisible
@@ -1645,7 +1886,7 @@ $I->click('#agree_button');
 
  * `param` $element
  * `param int` $timeout seconds
- * `throws`  \Exception
+@throws \Exception
 
 
 ### waitForJS
@@ -1667,7 +1908,9 @@ $I->waitForJS("return $.active == 0;", 60);
 ### waitForText
  
 Waits up to $timeout seconds for the given string to appear on the page.
-Can also be passed a selector to search in.
+
+Can also be passed a selector to search in, be as specific as possible when using selectors.
+waitForText() will only watch the first instance of the matching selector / text provided.
 If the given text doesn't appear, a timeout exception is thrown.
 
 ``` php
@@ -1680,6 +1923,6 @@ $I->waitForText('foo', 30, '.title'); // secs
  * `param string` $text
  * `param int` $timeout seconds
  * `param null` $selector
- * `throws`  \Exception
+@throws \Exception
 
-<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.2/src/Codeception/Module/WebDriver.php">Help us to improve documentation. Edit module reference</a></div>
+<p>&nbsp;</p><div class="alert alert-warning">Module reference is taken from the source code. <a href="https://github.com/Codeception/Codeception/tree/2.3/src/Codeception/Module/WebDriver.php">Help us to improve documentation. Edit module reference</a></div>

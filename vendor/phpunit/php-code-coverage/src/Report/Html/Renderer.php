@@ -13,8 +13,8 @@ namespace SebastianBergmann\CodeCoverage\Report\Html;
 use SebastianBergmann\CodeCoverage\Node\AbstractNode;
 use SebastianBergmann\CodeCoverage\Node\File as FileNode;
 use SebastianBergmann\CodeCoverage\Node\Directory as DirectoryNode;
+use SebastianBergmann\CodeCoverage\Version;
 use SebastianBergmann\Environment\Runtime;
-use SebastianBergmann\Version;
 
 /**
  * Base class for node renderers.
@@ -62,14 +62,12 @@ abstract class Renderer
      */
     public function __construct($templatePath, $generator, $date, $lowUpperBound, $highLowerBound)
     {
-        $version = new Version('4.0.2', dirname(dirname(dirname(dirname(__DIR__)))));
-
         $this->templatePath   = $templatePath;
         $this->generator      = $generator;
         $this->date           = $date;
         $this->lowUpperBound  = $lowUpperBound;
         $this->highLowerBound = $highLowerBound;
-        $this->version        = $version->getVersion();
+        $this->version        = Version::id();
     }
 
     /**
@@ -92,9 +90,10 @@ abstract class Renderer
                 $data['testedClassesPercent']
             );
         } else {
-            $classesLevel  = 'success';
-            $classesNumber = '0' . $numSeparator . '0';
-            $classesBar    = $this->getCoverageBar(100);
+            $classesLevel                         = '';
+            $classesNumber                        = '0' . $numSeparator . '0';
+            $classesBar                           = '';
+            $data['testedClassesPercentAsString'] = 'n/a';
         }
 
         if ($data['numMethods'] > 0) {
@@ -107,10 +106,10 @@ abstract class Renderer
                 $data['testedMethodsPercent']
             );
         } else {
-            $methodsLevel                         = 'success';
+            $methodsLevel                         = '';
             $methodsNumber                        = '0' . $numSeparator . '0';
-            $methodsBar                           = $this->getCoverageBar(100);
-            $data['testedMethodsPercentAsString'] = '100.00%';
+            $methodsBar                           = '';
+            $data['testedMethodsPercentAsString'] = 'n/a';
         }
 
         if ($data['numExecutableLines'] > 0) {
@@ -123,10 +122,10 @@ abstract class Renderer
                 $data['linesExecutedPercent']
             );
         } else {
-            $linesLevel                           = 'success';
+            $linesLevel                           = '';
             $linesNumber                          = '0' . $numSeparator . '0';
-            $linesBar                             = $this->getCoverageBar(100);
-            $data['linesExecutedPercentAsString'] = '100.00%';
+            $linesBar                             = '';
+            $data['linesExecutedPercentAsString'] = 'n/a';
         }
 
         $template->setVar(
@@ -264,7 +263,7 @@ abstract class Renderer
         if ($percent <= $this->lowUpperBound) {
             return 'danger';
         } elseif ($percent > $this->lowUpperBound &&
-            $percent <  $this->highLowerBound) {
+            $percent < $this->highLowerBound) {
             return 'warning';
         } else {
             return 'success';

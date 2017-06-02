@@ -28,7 +28,7 @@ class SuiteManagerTest extends \PHPUnit_Framework_TestCase
     {
         $this->dispatcher = new Symfony\Component\EventDispatcher\EventDispatcher;
         $settings = \Codeception\Configuration::$defaultSuiteSettings;
-        $settings['class_name'] = 'CodeGuy';
+        $settings['actor'] = 'CodeGuy';
         $this->suiteman = new \Codeception\SuiteManager($this->dispatcher, 'suite', $settings);
         
         $printer = \Codeception\Util\Stub::makeEmpty('PHPUnit_TextUI_ResultPrinter');
@@ -50,7 +50,7 @@ class SuiteManagerTest extends \PHPUnit_Framework_TestCase
         $this->suiteman->run(
             $this->runner,
             new \PHPUnit_Framework_TestResult,
-            ['colors' => false, 'steps' => true, 'debug' => false]
+            ['colors' => false, 'steps' => true, 'debug' => false, 'report_useless_tests' => false, 'disallow_test_output' => false]
         );
         $this->assertEquals($events, ['suite.before', 'suite.after']);
     }
@@ -115,7 +115,7 @@ class SuiteManagerTest extends \PHPUnit_Framework_TestCase
         $this->suiteman->run(
             $this->runner,
             $result,
-            ['silent' => true, 'colors' => false, 'steps' => true, 'debug' => false]
+            ['silent' => true, 'colors' => false, 'steps' => true, 'debug' => false, 'report_useless_tests' => false, 'disallow_test_output' => false]
         );
         $this->assertContains('test.before', $events);
         $this->assertContains('test.before.admin', $events);

@@ -6,7 +6,6 @@ use Codeception\Lib\Generator\PageObject as PageObjectGenerator;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -47,21 +46,21 @@ class GeneratePageObject extends Command
         }
 
         $conf = $suite
-            ? $this->getSuiteConfig($suite, $input->getOption('config'))
-            : $this->getGlobalConfig($input->getOption('config'));
+            ? $this->getSuiteConfig($suite)
+            : $this->getGlobalConfig();
 
         if ($suite) {
             $suite = DIRECTORY_SEPARATOR . ucfirst($suite);
         }
 
-        $path = $this->buildPath(Configuration::supportDir() . 'Page' . $suite, $class);
+        $path = $this->createDirectoryFor(Configuration::supportDir() . 'Page' . $suite, $class);
 
-        $filename = $path . $this->getClassName($class) . '.php';
+        $filename = $path . $this->getShortClassName($class) . '.php';
 
         $output->writeln($filename);
 
         $gen = new PageObjectGenerator($conf, ucfirst($suite) . '\\' . $class);
-        $res = $this->save($filename, $gen->produce());
+        $res = $this->createFile($filename, $gen->produce());
 
         if (!$res) {
             $output->writeln("<error>PageObject $filename already exists</error>");

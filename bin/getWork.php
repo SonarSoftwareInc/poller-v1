@@ -2,6 +2,7 @@
 
 require_once(dirname(__FILE__) . "/../vendor/autoload.php");
 
+use Carbon\Carbon;
 use Dotenv\Dotenv;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
@@ -31,15 +32,38 @@ catch (Exception $e)
 
 Resque::setBackend('localhost:6379');
 
-if (TemporaryVariables::get("ICMP Polling Running") == 1 || TemporaryVariables::get("SNMP Polling Running") == 1)
+$now = Carbon::now("UTC");
+
+$icmpPollingStart = TemporaryVariables::get("ICMP Polling Running");
+$snmpPollingStart = TemporaryVariables::get("SNMP Polling Running");
+if ($icmpPollingStart != null)
 {
-    $climate->shout("There are still jobs pending! Aborting.");
-    if (getenv('DEBUG') == true)
+    $icmpPollingStartCarbon = new Carbon($icmpPollingStart, "UTC");
+    if ($now->diffInMinutes($icmpPollingStartCarbon) < 30)
     {
-        $logger->log("There are still jobs pending! Aborting.",Logger::ERROR);
+        $climate->shout("There are still jobs pending! Aborting.");
+        if (getenv('DEBUG') == true)
+        {
+            $logger->log("There are still jobs pending! Aborting.",Logger::ERROR);
+        }
+        return;
     }
-    return;
 }
+
+if ($snmpPollingStart != null)
+{
+    $snmpPollingStartCarbon = new Carbon($snmpPollingStart, "UTC");
+    if ($now->diffInMinutes($snmpPollingStartCarbon) < 30)
+    {
+        $climate->shout("There are still jobs pending! Aborting.");
+        if (getenv('DEBUG') == true)
+        {
+            $logger->log("There are still jobs pending! Aborting.",Logger::ERROR);
+        }
+        return;
+    }
+}
+
 
 try {
     try {
@@ -94,12 +118,12 @@ try {
     $contents = json_decode($result->getBody()->getContents());
 
     $work = $formatter->formatIcmpHostsFromSonar($contents);
-    TemporaryVariables::set("ICMP Polling Running",1);
+    TemporaryVariables::set("ICMP Polling Running",$now->toDateTimeString());
     $token = Resque::enqueue('polling', 'SonarSoftware\Poller\Jobs\PerformIcmpPolling', $work, true);
     $climate->lightGreen("Enqueued ICMP job and got token $token");
 
     $work = $formatter->formatSnmpWork($contents);
-    TemporaryVariables::set("SNMP Polling Running",1);
+    TemporaryVariables::set("SNMP Polling Running",$now->toDateTimeString());
     $token = Resque::enqueue('polling', 'SonarSoftware\Poller\Jobs\PerformSnmpGets', $work, true);
     $climate->lightGreen("Enqueued SNMP gets job and got token $token");
 }

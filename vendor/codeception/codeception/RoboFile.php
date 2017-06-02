@@ -2,11 +2,11 @@
 require_once __DIR__.'/vendor/autoload.php';
 
 use Symfony\Component\Finder\Finder;
-use \Robo\Task\Development\GenerateMarkdownDoc as Doc;
+use Robo\Task\Development\GenerateMarkdownDoc as Doc;
 
 class RoboFile extends \Robo\Tasks
 {
-    const STABLE_BRANCH = '2.2';
+    const STABLE_BRANCH = '2.3';
     const REPO_BLOB_URL = 'https://github.com/Codeception/Codeception/blob';
 
     public function release()
@@ -15,14 +15,13 @@ class RoboFile extends \Robo\Tasks
         $this->update();
         $this->buildDocs();
         $this->publishDocs();
-
-        $this->buildPhar54();
         $this->buildPhar();
-        $this->revertComposerJsonChanges();
+        $this->buildPhar5();
         $this->publishPhar();
         $this->publishGit();
         $this->publishBase(null, \Codeception\Codecept::VERSION);
         $this->versionBump();
+        $this->update(); //update dependencies after release, because buildPhar5 set them to old versions
     }
 
     public function versionBump($version = '')
@@ -155,11 +154,11 @@ class RoboFile extends \Robo\Tasks
         $this->taskComposerUpdate()->run();
     }
 
-    private function installDependenciesForPhp56()
+    private function installDependenciesForPhp70()
     {
         $this->taskReplaceInFile('composer.json')
             ->regex('/"platform": \{.*?\}/')
-            ->to('"platform": {"php": "5.6.0"}')
+            ->to('"platform": {"php": "7.0.0"}')
             ->run();
 
         $this->taskComposerUpdate()->run();
@@ -180,21 +179,23 @@ class RoboFile extends \Robo\Tasks
      */
     public function buildPhar()
     {
+        $this->installDependenciesForPhp70();
         $this->packPhar('package/codecept.phar');
+        $this->revertComposerJsonChanges();
     }
 
     /**
      * @desc creates codecept.phar with Guzzle 5.3 and Symfony 2.8
      * @throws Exception
      */
-    public function buildPhar54()
+    public function buildPhar5()
     {
         if (!file_exists('package/php54')) {
             mkdir('package/php54');
         }
         $this->installDependenciesForPhp54();
         $this->packPhar('package/php54/codecept.phar');
-        $this->installDependenciesForPhp56();
+        $this->revertComposerJsonChanges();
     }
 
     private function packPhar($pharFileName)
@@ -261,6 +262,7 @@ class RoboFile extends \Robo\Tasks
         $pharTask->addFile('autoload.php', 'autoload.php')
             ->addFile('codecept', 'package/bin')
             ->addFile('shim.php', 'shim.php')
+            ->addFile('phpunit5-loggers.php', 'phpunit5-loggers.php')
             ->run();
         
         $code = $this->taskExec('php ' . $pharFileName)->run()->getExitCode();
@@ -278,6 +280,7 @@ class RoboFile extends \Robo\Tasks
         $this->buildDocsModules();
         $this->buildDocsUtils();
         $this->buildDocsCommands();
+        $this->buildDocsApi();
         $this->buildDocsExtensions();
     }
 
@@ -340,7 +343,7 @@ class RoboFile extends \Robo\Tasks
                     $text = str_replace('@part ', ' * `[Part]` ', $text);
                     $text = str_replace("@return mixed\n", '', $text);
                     $text = preg_replace('~@return (.*?)~', ' * `return` $1', $text);
-                    $text = preg_replace("~@(.*?)([$\s])~", ' * `$1` $2', $text);
+                    $text = preg_replace("~^@(.*?)([$\s])~", ' * `$1` $2', $text);
                     return $title . $text;
                 })->processMethodSignature(false)
                 ->reorderMethods('ksort')
@@ -357,27 +360,18 @@ class RoboFile extends \Robo\Tasks
             $className = '\Codeception\Util\\' . $utilName;
             $source = self::REPO_BLOB_URL."/".self::STABLE_BRANCH."/src/Codeception/Util/$utilName.php";
 
-            $this->taskGenDoc('docs/reference/' . $utilName . '.md')
-                ->docClass($className)
-                ->append(
-                    '<p>&nbsp;</p><div class="alert alert-warning">Reference is taken from the source code. '
-                    .'<a href="'.$source.'">Help us to improve documentation. Edit module reference</a></div>'
-                )
-                ->processClassDocBlock(function (ReflectionClass $r, $text) {
-                    return $text . "\n";
-                })->processMethodSignature(function (ReflectionMethod $r, $text) {
-                    return '### ' . $r->getName();
-                })->processMethodDocBlock(function (ReflectionMethod $r, $text) use ($utilName, $source) {
-                    $line = $r->getStartLine();
-                    if ($r->isStatic()) {
-                        $text = "\n*static*\n$text";
-                    }
-                    $text = preg_replace("~@(.*?)([$\s])~", ' * `$1` $2', $text);
-                    $text .= "\n[See source]($source#L$line)";
-                    return "\n" . $text."\n";
-                })
-                ->reorderMethods('ksort')
-                ->run();
+            $this->documentApiClass('docs/reference/' . $utilName . '.md', $className, $source);
+        }
+    }
+
+    public function buildDocsApi()
+    {
+        $this->say("API Classes");
+        $apiClasses = ['Codeception\Module', 'Codeception\InitTemplate'];
+
+        foreach ($apiClasses as $apiClass) {
+            $name = (new ReflectionClass($apiClass))->getShortName();
+            $this->documentApiClass('docs/reference/' . $name . '.md', $apiClass, true);
         }
     }
 
@@ -411,15 +405,16 @@ class RoboFile extends \Robo\Tasks
         $extensions = Finder::create()->files()->sortByName()->name('*.php')->in(__DIR__ . '/ext');
 
         $extGenerator= $this->taskGenDoc(__DIR__.'/ext/README.md');
-        foreach ($extensions as $command) {
-            $commandName = basename(substr($command, 0, -4));
-            $className = '\Codeception\Extension\\' . $commandName;
+        foreach ($extensions as $extension) {
+            $extensionName = basename(substr($extension, 0, -4));
+            $className = '\Codeception\Extension\\' . $extensionName;
             $extGenerator->docClass($className);
         }
         $extGenerator
             ->prepend("# Official Extensions\n")
-            ->processClassSignature(function ($r, $text) {
-                return "## ".$r->getName();
+            ->processClassSignature(function (ReflectionClass $r, $text) {
+                $name = $r->getShortName();
+                return "## $name\n\n[See Source](" . self::REPO_BLOB_URL."/".self::STABLE_BRANCH. "/ext/$name.php)";
             })
             ->filterMethods(function (ReflectionMethod $r) {
                 return false;
@@ -443,9 +438,9 @@ class RoboFile extends \Robo\Tasks
             if (!is_dir('php54')) {
                 mkdir('php54');
             }
-            copy('../php54/codecept.phar', 'php54/codecept.phar');
+            copy('../php54/codecept.phar', 'php5/codecept.phar');
             $this->taskExec('git add codecept.phar')->run();
-            $this->taskExec('git add php54/codecept.phar')->run();
+            $this->taskExec('git add php5/codecept.phar')->run();
         }
 
         $this->taskFileSystemStack()
@@ -492,7 +487,11 @@ class RoboFile extends \Robo\Tasks
 
             if (file_exists("releases/$releaseName/php54/codecept.phar")) {
                 $downloadUrl = "http://codeception.com/releases/$releaseName/php54/codecept.phar";
-                $versionLine .= ", [for PHP 5.4 or 5.5]($downloadUrl)";
+                if (version_compare($releaseName, '2.3.0', '>=')) {
+                    $versionLine .= ", [for PHP 5.4 - 5.6]($downloadUrl)";
+                } else {
+                    $versionLine .= ", [for PHP 5.4 or 5.5]($downloadUrl)";
+                }
             }
 
             $releaseFile->line($versionLine);
@@ -524,6 +523,7 @@ class RoboFile extends \Robo\Tasks
 
         chdir('../..');
 
+        $this->say('building changelog');
         $this->taskWriteToFile('package/site/changelog.markdown')
             ->line('---')
             ->line('layout: page')
@@ -533,6 +533,8 @@ class RoboFile extends \Robo\Tasks
             ->line(
                 '<div class="alert alert-warning">Download specific version at <a href="/builds">builds page</a></div>'
             )
+            ->line('')
+            ->line('# Changelog')
             ->line('')
             ->line($this->processChangelog())
             ->run();
@@ -576,7 +578,7 @@ class RoboFile extends \Robo\Tasks
 
             copy($doc->getPathname(), 'package/site/' . $newfile);
 
-            $highlight_languages = implode('|', ['php', 'html', 'bash', 'yaml', 'json', 'xml', 'sql']);
+            $highlight_languages = implode('|', ['php', 'html', 'bash', 'yaml', 'json', 'xml', 'sql', 'gherkin']);
             $contents = preg_replace(
                 "~```\s?($highlight_languages)\b(.*?)```~ms",
                 "{% highlight $1 %}\n$2\n{% endhighlight %}",
@@ -708,10 +710,22 @@ class RoboFile extends \Robo\Tasks
 
     protected function processChangelog()
     {
-        $changelog = file_get_contents('CHANGELOG.md');
+        $sortByVersionDesc = function (\SplFileInfo $a, \SplFileInfo $b) {
+            $pattern = '/^CHANGELOG-(\d+\.\d+).md$/';
+            if (preg_match($pattern, $a->getBasename(), $matches1) && preg_match($pattern, $b->getBasename(), $matches2)) {
+                return version_compare($matches1[1], $matches2[1]) * -1;
+            }
+            return 0;
+        };
+
+        $changelogFiles = Finder::create()->name('CHANGELOG-*.md')->in('.')->depth(0)->sort($sortByVersionDesc);
+        $changelog = '';
+        foreach ($changelogFiles as $file) {
+            $changelog .= $file->getContents();
+        }
 
         //user
-        $changelog = preg_replace('~\s@(\w+)~', ' **[$1](https://github.com/$1)**', $changelog);
+        $changelog = preg_replace('~\s@([\w-]+)~', ' **[$1](https://github.com/$1)**', $changelog);
 
         //issue
         $changelog = preg_replace(
@@ -862,6 +876,57 @@ class RoboFile extends \Robo\Tasks
             ->arg('.')
             ->arg('--standard=ruleset.xml')
             ->arg('--ignore=tests,vendor,package,docs')
+            ->run();
+    }
+
+    /**
+     * @param $file
+     * @param $className
+     * @param $source
+     */
+    protected function documentApiClass($file, $className, $all = false)
+    {
+        $uri = str_replace('\\', '/', $className);
+        $source = self::REPO_BLOB_URL."/".self::STABLE_BRANCH."/src/$uri.php";
+
+        $this->taskGenDoc($file)
+            ->docClass($className)
+            ->filterMethods(function (ReflectionMethod $r) use ($all, $className) {
+                return $all || $r->isPublic();
+            })
+            ->append(
+                '<p>&nbsp;</p><div class="alert alert-warning">Reference is taken from the source code. '
+                . '<a href="' . $source . '">Help us to improve documentation. Edit module reference</a></div>'
+            )
+            ->processPropertySignature(function ($r) {
+                return "\n#### $" . $r->name. "\n\n";
+            })
+            ->processPropertyDocBlock(function ($r, $text) {
+                $modifiers = implode(' ', \Reflection::getModifierNames($r->getModifiers()));
+                $text = ' *' . $modifiers . '* **$' . $r->name . "**\n" . $text;
+                $text = preg_replace("~@(.*?)\s(.*)~", 'type `$2`', $text);
+                return $text;
+            })
+            ->processClassDocBlock(
+                function (ReflectionClass $r, $text) {
+                    return $text . "\n";
+                }
+            )
+            ->processMethodSignature(function ($r, $text) {
+                return "#### {$r->name}()\n\n" . ltrim($text, '#');
+            })
+            ->processMethodDocBlock(
+                function (ReflectionMethod $r, $text) use ($file) {
+                    $file = str_replace(__DIR__, '', $r->getFileName());
+                    $source = self::REPO_BLOB_URL."/".self::STABLE_BRANCH. $file;
+                    
+                    $line = $r->getStartLine();
+                    $text = preg_replace("~^\s?@(.*?)\s~m", ' * `$1` $2', $text);
+                    $text .= "\n[See source]($source#L$line)";
+                    return "\n" . $text . "\n";
+                }
+            )
+            ->reorderMethods('ksort')
             ->run();
     }
 }

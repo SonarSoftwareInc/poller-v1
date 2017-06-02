@@ -3,10 +3,11 @@ namespace Codeception\Lib;
 
 use Codeception\Lib\Interfaces\ConflictsWithModule;
 use Codeception\Lib\Interfaces\DependsOnModule;
+use Codeception\Test\Unit;
 use Codeception\Util\Stub;
 
 // @codingStandardsIgnoreFile
-class ModuleContainerTest extends \PHPUnit_Framework_TestCase
+class ModuleContainerTest extends Unit
 {
     use \Codeception\Specify;
     /**
@@ -80,6 +81,7 @@ class ModuleContainerTest extends \PHPUnit_Framework_TestCase
         $this->assertArrayNotHasKey('amOnPage', $actions);
         $this->assertArrayNotHasKey('see', $actions);
         $this->assertArrayNotHasKey('click', $actions);
+        $this->assertArrayHasKey('useUniversalFramework', $actions);
     }
 
     /**
