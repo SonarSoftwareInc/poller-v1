@@ -42,6 +42,43 @@ class Formatter
     }
 
     /**
+     * Format the work from Sonar in order to determine device mapping.
+     * @param stdClass $work
+     * @return array
+     */
+    public function formatDeviceMappingWork(stdClass $work):array
+    {
+        $formattedWork = [
+            'templates' => [],
+            'hosts' => [],
+        ];
+
+        foreach ($work->data->monitoring_templates as $templateID => $template)
+        {
+            $formattedWork['templates'][$templateID] = $template;
+        }
+
+        foreach ($work->data->hosts as $hostID => $hostDetails)
+        {
+            if ($hostDetails->type != "network_sites")
+            {
+                continue;
+            }
+
+            if (isset($formattedWork['templates'][$hostDetails->monitoring_template_id]))
+            {
+                $formattedWork['hosts'][$hostID] = [
+                    'ip' => $hostDetails->ip,
+                    'template_id' => $hostDetails->monitoring_template_id,
+                    'snmp_overrides' => $hostDetails->snmp_overrides,
+                ];
+            }
+        }
+
+        return $formattedWork;
+    }
+
+    /**
      * Format ICMP hosts into a usable format
      * @param stdClass $work
      * @return array
