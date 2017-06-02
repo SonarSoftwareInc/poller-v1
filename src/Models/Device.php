@@ -3,11 +3,13 @@
 namespace SonarSoftware\Poller\Models;
 
 use InvalidArgumentException;
+use SNMP;
 
 class Device
 {
     protected $interfaces = [];
     protected $id;
+    protected $snmpObject;
 
     public function toArray():array
     {
@@ -22,6 +24,22 @@ class Device
         }
 
         return $structure;
+    }
+
+    /**
+     * @param SNMP $snmpObject
+     */
+    public function setSnmpObject(SNMP $snmpObject)
+    {
+        $this->snmpObject = $snmpObject;
+    }
+
+    /**
+     * @return SNMP
+     */
+    public function getSnmpObject():SNMP
+    {
+        return $this->snmpObject;
     }
 
     /**

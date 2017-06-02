@@ -3,8 +3,12 @@
 namespace SonarSoftware\Poller\Pollers;
 
 use Dotenv\Dotenv;
+use Exception;
 use Monolog\Logger;
+use SNMP;
+use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
 use SonarSoftware\Poller\Formatters\Formatter;
+use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Services\SonarLogger;
 
 class DeviceMappingPoller
@@ -48,6 +52,7 @@ class DeviceMappingPoller
 
         $pids = [];
 
+
         for ($i = 0; $i < count($chunks); $i++)
         {
             $pid = pcntl_fork();
@@ -59,7 +64,24 @@ class DeviceMappingPoller
                     exit();
                 }
 
-                //TODO: Need to do the work here
+                $myChunksWithDeviceType = $this->determineDeviceTypes($chunks[$i]);
+
+                $genericDeviceMapper = new GenericDeviceMapper();
+                foreach ($myChunksWithDeviceType as $hostWithDeviceType)
+                {
+                    $device = new Device();
+                    $device->setId($hostWithDeviceType['id']);
+                    $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
+
+                    //Additional 'case' statements can be added here to break out querying to a separate device mapper
+                    switch ($hostWithDeviceType['type_query_result'])
+                    {
+                        default:
+                            $results = $genericDeviceMapper->mapDevice($device);
+                    }
+                }
+
+
                 exit();
             }
             else
@@ -67,8 +89,7 @@ class DeviceMappingPoller
                 $pids[$pid] = $pid;
             }
         }
-
-
+        
         while (count($pids) > 0)
         {
             foreach ($pids as $pid)
@@ -101,5 +122,79 @@ class DeviceMappingPoller
         $formatter = new Formatter();
         //TODO: Need to add a function here to format device mapping results
         return $formatter->formatSnmpResultsFromSnmpClass($results, $work['hosts']);
+    }
+
+    /**
+     * Determine the type of a device and return it to the caller for further processing
+     * @param array $chunks
+     * @return array
+     */
+    private function determineDeviceTypes(array $chunks)
+    {
+        $updatedChunks = [];
+        foreach ($chunks as $host)
+        {
+            $snmpObject = $this->buildSnmpObjectForHost($host);
+            try {
+                $result = $snmpObject->get("1.3.6.1.2.1.1.2.0");
+                $result = explode(":",$result);
+                $host['type_query_result'] = trim($result[1]);
+                array_push($updatedChunks,$host);
+            }
+            catch (Exception $e)
+            {
+                continue;
+            }
+        }
+
+        return $updatedChunks;
+    }
+
+    /**
+     * Build the SNMP object for a particular host
+     * @param array $host
+     * @return SNMP
+     */
+    private function buildSnmpObjectForHost(array $host):SNMP
+    {
+        $templateDetails = $this->templates[$host['template_id']];
+        $snmpVersion = isset($host['snmp_overrides']['snmp_version']) ? $host['snmp_overrides']['snmp_version'] : $templateDetails['snmp_version'];
+
+        switch ($snmpVersion)
+        {
+            case 2:
+                $version = SNMP::VERSION_2C;
+                break;
+            case 3:
+                $version = SNMP::VERSION_3;
+                break;
+            default:
+                $version = SNMP::VERSION_1;
+                break;
+        }
+
+        $community = isset($host['snmp_overrides']['snmp_community']) ? $host['snmp_overrides']['snmp_community'] : $templateDetails['snmp_community'];
+
+        //Regular GETs (this will bulk GET multiple OIDs)
+        $snmp = new SNMP($version, $host['ip'], $community, $this->timeout, $this->retries);
+        $snmp->valueretrieval = SNMP_VALUE_LIBRARY;
+        $snmp->oid_output_format = SNMP_OID_OUTPUT_NUMERIC;
+        $snmp->enum_print = true;
+        $snmp->exceptions_enabled = SNMP::ERRNO_ANY;
+
+        if ($version === SNMP::VERSION_3)
+        {
+            $snmp->setSecurity(
+                isset($host['snmp_overrides']['snmp3_sec_level']) ? $host['snmp_overrides']['snmp3_sec_level'] : $templateDetails['snmp3_sec_level'],
+                isset($host['snmp_overrides']['snmp3_auth_protocol']) ? $host['snmp_overrides']['snmp3_auth_protocol'] : $templateDetails['snmp3_auth_protocol'],
+                isset($host['snmp_overrides']['snmp3_auth_passphrase']) ? $host['snmp_overrides']['snmp3_auth_passphrase'] : $templateDetails['snmp3_auth_passphrase'],
+                isset($host['snmp_overrides']['snmp3_priv_protocol']) ? $host['snmp_overrides']['snmp3_priv_protocol'] : $templateDetails['snmp3_priv_protocol'],
+                isset($host['snmp_overrides']['snmp3_priv_passphrase']) ? $host['snmp_overrides']['snmp3_priv_passphrase'] : $templateDetails['snmp3_priv_passphrase'],
+                isset($host['snmp_overrides']['snmp3_context_name']) ? $host['snmp_overrides']['snmp3_context_name'] : $templateDetails['snmp3_context_name'],
+                isset($host['snmp_overrides']['snmp3_context_engine_id']) ? $host['snmp_overrides']['snmp3_context_engine_id'] : $templateDetails['snmp3_context_engine_id']
+            );
+        }
+
+        return $snmp;
     }
 }

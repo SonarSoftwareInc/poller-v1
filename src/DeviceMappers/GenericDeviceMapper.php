@@ -9,6 +9,26 @@ class GenericDeviceMapper implements DeviceMapperInterface
 {
     public function mapDevice(Device $device):DeviceMappingResult
     {
-        // TODO: Implement mapDevice() method.
+
+    }
+
+    private function checkForArp(Device $device):Device
+    {
+
+    }
+
+    private function checkBridgingTable(Device $device):Device
+    {
+
+    }
+
+    private function getInterfaceNamesIndexedByInterfaceID(Device $device):array
+    {
+
+    }
+
+    private function getInterfaceStatusIndexedByInterfaceID(Device $device):array
+    {
+
     }
 }

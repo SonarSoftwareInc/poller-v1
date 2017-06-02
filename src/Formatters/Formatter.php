@@ -75,6 +75,7 @@ class Formatter
                     'ip' => $hostDetails->ip,
                     'template_id' => $hostDetails->monitoring_template_id,
                     'snmp_overrides' => $hostDetails->snmp_overrides,
+                    'id' => $hostID,
                 ];
             }
         }
