@@ -13,6 +13,13 @@ class DeviceMappingPoller
     public function poll(array $work):array
     {
         $results = [];
+
+        //First, we need to determine the type of each device.
+
+        //Then we need to switch through and instantiate the correct mapper type for each, defaulting to GenericDeviceMapper
+
+        //Take all the results and build them into something consistent for delivery back (write them all to file and then rebuild)
+
         return $results;
     }
 
