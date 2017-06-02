@@ -6,6 +6,10 @@ use stdClass;
 
 class Formatter
 {
+    //Types of hosts
+    const NETWORK_SITES = "network_sites";
+    const ACCOUNTS = "accounts";
+
     /**
      * Format the work from Sonar for SNMP queries into a usable format
      * @param stdClass $work
@@ -60,7 +64,7 @@ class Formatter
 
         foreach ($work->data->hosts as $hostID => $hostDetails)
         {
-            if ($hostDetails->type != "network_sites")
+            if ($hostDetails->type != $this::NETWORK_SITES)
             {
                 continue;
             }

@@ -41,8 +41,8 @@ if (version_compare($currentVersion, $latestVersion) === -1)
 
     exec("/usr/bin/monit restart defaultQueue");
 
-    TemporaryVariables::set("SNMP Polling Running",0);
-    TemporaryVariables::set("ICMP Polling Running",0);
+    TemporaryVariables::set("SNMP Polling Running",null);
+    TemporaryVariables::set("ICMP Polling Running",null);
 }
 
 echo "You are on the latest version.\n";
