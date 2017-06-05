@@ -6,7 +6,10 @@ use Dotenv\Dotenv;
 use Exception;
 use Monolog\Logger;
 use SNMP;
+use SonarSoftware\Poller\DeviceMappers\CambiumCanopyPMPAccessPointMapper;
+use SonarSoftware\Poller\DeviceMappers\CambiumEpmpAccessPointMapper;
 use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
+use SonarSoftware\Poller\DeviceMappers\UbiquitiAirMaxAccessPointMapper;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Services\SonarLogger;
@@ -80,19 +83,20 @@ class DeviceMappingPoller
                         switch ($hostWithDeviceType['type_query_result'])
                         {
                             case "1.3.6.1.4.1.161.19.250.256":
-                                //PMP100/450
+                                $mapper = new CambiumCanopyPMPAccessPointMapper($device);
                                 break;
                             case "1.3.6.1.4.1.17713.21":
-                                //ePMP
+                                $mapper = new CambiumEpmpAccessPointMapper($device);
                                 break;
                             case "1.3.6.1.4.1.41112.1.4":
-                                //Ubiquiti
+                                $mapper = new UbiquitiAirMaxAccessPointMapper($device);
                                 break;
                             default:
-                                $genericDeviceMapper = new GenericDeviceMapper($device);
-                                $device = $genericDeviceMapper->mapDevice();
+                                $mapper = new GenericDeviceMapper($device);
                                 break;
                         }
+
+                        $device = $mapper->mapDevice();
 
                         array_push($devices, $device->toArray());
                     }
