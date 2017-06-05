@@ -89,7 +89,7 @@ abstract class BaseDeviceMapper
 
             $deviceInterface->setConnectedMacs(array_unique($interface['connected_l2']),DeviceInterface::LAYER2);
             $deviceInterface->setConnectedMacs(array_unique($interface['connected_l3']),DeviceInterface::LAYER3);
-            $arrayOfDeviceInterfaces[$interfaceIndex] = $deviceInterface;
+            $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$interfaceIndex] = $deviceInterface;
         }
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
