@@ -65,7 +65,7 @@ abstract class BaseDeviceMapper
         if ($getBridgingTable === true)
         {
             try {
-                $interfacesIndexedByInterfaceID = $this->getConnectedSms($interfacesIndexedByInterfaceID);
+                $interfacesIndexedByInterfaceID = $this->getBridgingTable($interfacesIndexedByInterfaceID);
             }
             catch (Exception $e)
             {
