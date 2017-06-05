@@ -2,8 +2,10 @@
 
 namespace SonarSoftware\Poller\DeviceMappers;
 
+use Exception;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
+use SonarSoftware\Poller\Models\DeviceInterface;
 
 abstract class BaseDeviceMapper
 {
@@ -13,6 +15,84 @@ abstract class BaseDeviceMapper
     {
         $this->snmp = $this->snmp = $device->getSnmpObject();
         $this->device = $device;
+    }
+
+    /**
+     * @param bool $getArp
+     * @param bool $getBridgingTable
+     * @param bool $getIpv4
+     * @return array
+     */
+    protected function getInterfacesWithStandardMibData($getArp = true, $getBridgingTable = true, $getIpv4 = true):array
+    {
+        $interfacesIndexedByInterfaceID = $this->buildInitialInterfaceArray();
+        try {
+            $interfacesIndexedByInterfaceID = $this->getInterfaceMacAddresses($interfacesIndexedByInterfaceID);
+        }
+        catch (Exception $e)
+        {
+            //
+        }
+        try {
+            $interfacesIndexedByInterfaceID = $this->getInterfaceStatus($interfacesIndexedByInterfaceID);
+        }
+        catch (Exception $e)
+        {
+            //
+        }
+        if ($getArp === true)
+        {
+            try {
+                $interfacesIndexedByInterfaceID = $this->getArp($interfacesIndexedByInterfaceID);
+            }
+            catch (Exception $e)
+            {
+                //
+            }
+        }
+
+        if ($getIpv4 === true)
+        {
+            try {
+                $interfacesIndexedByInterfaceID = $this->getIpv4Addresses($interfacesIndexedByInterfaceID);
+            }
+            catch (Exception $e)
+            {
+                //
+            }
+        }
+
+        if ($getBridgingTable === true)
+        {
+            try {
+                $interfacesIndexedByInterfaceID = $this->getConnectedSms($interfacesIndexedByInterfaceID);
+            }
+            catch (Exception $e)
+            {
+                //
+            }
+        }
+
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = [];
+        foreach ($interfacesIndexedByInterfaceID as $interfaceIndex => $interface)
+        {
+            $deviceInterface = new DeviceInterface();
+            $deviceInterface->setUp($interface['status']);
+            $deviceInterface->setDescription($interface['name']);
+            $deviceInterface->setMetadata([
+                'ip_addresses' => $interface['ip_addresses'],
+            ]);
+            if ($this->validateMac($interface['mac_address']))
+            {
+                $deviceInterface->setMacAddress($interface['mac_address']);
+            }
+
+            $deviceInterface->setConnectedMacs(array_unique($interface['connected_l2']),DeviceInterface::LAYER2);
+            $deviceInterface->setConnectedMacs(array_unique($interface['connected_l3']),DeviceInterface::LAYER3);
+            $arrayOfDeviceInterfaces[$interfaceIndex] = $deviceInterface;
+        }
+
+        return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
 
     /**
@@ -28,7 +108,8 @@ abstract class BaseDeviceMapper
             $interfaces[$boom[count($boom)-1]] = [
                 'name' => $this->cleanSnmpResult($datum),
                 'status' => null,
-                'connected' => [],
+                'connected_l2' => [],
+                'connected_l3' => [],
                 'ip_addresses' => [],
                 'mac_address' => null,
             ];

@@ -10,8 +10,12 @@ class DeviceInterface
     private $up;
     private $metadata = [];
     private $macAddress;
-    private $connectedMacs = [];
+    private $connectedMacsLayer2 = [];
+    private $connectedMacsLayer3 = [];
     private $description;
+
+    const LAYER2 = "l2";
+    const LAYER3 = "l3";
 
     /**
      * Convert this interface to an array
@@ -24,7 +28,8 @@ class DeviceInterface
             'description' => $this->description,
             'metadata' => $this->metadata,
             'mac_address' => $this->macAddress,
-            'connected' => $this->connectedMacs,
+            'connected_l2' => $this->connectedMacsLayer2,
+            'connected_l3' => $this->connectedMacsLayer3,
         ];
     }
 
@@ -102,9 +107,15 @@ class DeviceInterface
 
     /**
      * @param array $connectedMacs
+     * @param string $layer - One of $this::LAYER2, $this::LAYER3
      */
-    public function setConnectedMacs(array $connectedMacs)
+    public function setConnectedMacs(array $connectedMacs, string $layer)
     {
+        if (!in_array($layer,[$this::LAYER2, $this::LAYER3]))
+        {
+            throw new InvalidArgumentException("Layer must be one of the layer constants.");
+        }
+
         $cleanedMacs = [];
         foreach ($connectedMacs as $connectedMac)
         {
@@ -115,7 +126,16 @@ class DeviceInterface
             }
             array_push($cleanedMacs, $connectedMac);
         }
-        $this->connectedMacs = $cleanedMacs;
+
+        switch ($layer)
+        {
+            case $this::LAYER2:
+                $this->connectedMacsLayer2 = $cleanedMacs;
+                break;
+            case $this::LAYER3:
+                $this->connectedMacsLayer3 = $cleanedMacs;
+                break;
+        }
     }
 
     /**

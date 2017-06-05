@@ -12,7 +12,8 @@
         "vlucas/phpdotenv": "^2.4",
         "monolog/monolog": "^1.22",
         "nesbot/carbon": "^1.21",
-        "predis/predis": "^1.1"
+        "predis/predis": "^1.1",
+        "psy/psysh": "@stable"
     },
     "autoload": {
         "psr-4" : {

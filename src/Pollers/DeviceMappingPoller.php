@@ -79,6 +79,15 @@ class DeviceMappingPoller
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
                         switch ($hostWithDeviceType['type_query_result'])
                         {
+                            case "1.3.6.1.4.1.161.19.250.256":
+                                //PMP100/450
+                                break;
+                            case "1.3.6.1.4.1.17713.21":
+                                //ePMP
+                                break;
+                            case "1.3.6.1.4.1.41112.1.4":
+                                //Ubiquiti
+                                break;
                             default:
                                 $genericDeviceMapper = new GenericDeviceMapper($device);
                                 $device = $genericDeviceMapper->mapDevice();
@@ -152,7 +161,7 @@ class DeviceMappingPoller
             try {
                 $result = $snmpObject->get("1.3.6.1.2.1.1.2.0");
                 $result = explode(":",$result);
-                $host['type_query_result'] = trim($result[1]);
+                $host['type_query_result'] = trim(ltrim($result[1],"."));
                 array_push($updatedChunks,$host);
             }
             catch (Exception $e)
