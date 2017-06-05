@@ -128,15 +128,21 @@ function queueIcmpWork(stdClass $contents, Carbon $now)
     $skipIcmpPolling = false;
     if ($icmpPollingStart != null)
     {
-        $icmpPollingStartCarbon = new Carbon($icmpPollingStart, "UTC");
-        if ($now->diffInMinutes($icmpPollingStartCarbon) < 30)
-        {
-            $climate->shout("Skipping ICMP polling, as it is still pending.");
-            if (getenv('DEBUG') == true)
+        try {
+            $icmpPollingStartCarbon = new Carbon($icmpPollingStart, "UTC");
+            if ($now->diffInMinutes($icmpPollingStartCarbon) < 30)
             {
-                $logger->log("Skipping ICMP polling, as it is still pending.",Logger::ERROR);
+                $climate->shout("Skipping ICMP polling, as it is still pending.");
+                if (getenv('DEBUG') == true)
+                {
+                    $logger->log("Skipping ICMP polling, as it is still pending.",Logger::ERROR);
+                }
+                $skipIcmpPolling = true;
             }
-            $skipIcmpPolling = true;
+        }
+        catch (Exception $e)
+        {
+            $logger->log("Could not instantiate Carbon from $icmpPollingStart", Logger::ERROR);
         }
     }
     if ($skipIcmpPolling === false)
@@ -164,15 +170,21 @@ function queueSnmpWork(stdClass $contents, Carbon $now)
     $skipSnmpPolling = false;
     if ($snmpPollingStart != null)
     {
-        $snmpPollingStartCarbon = new Carbon($snmpPollingStart, "UTC");
-        if ($now->diffInMinutes($snmpPollingStartCarbon) < 30)
-        {
-            $climate->shout("Skipping SNMP polling, as it is still pending.");
-            if (getenv('DEBUG') == true)
+        try {
+            $snmpPollingStartCarbon = new Carbon($snmpPollingStart, "UTC");
+            if ($now->diffInMinutes($snmpPollingStartCarbon) < 30)
             {
-                $logger->log("Skipping SNMP polling, as it is still pending.",Logger::ERROR);
+                $climate->shout("Skipping SNMP polling, as it is still pending.");
+                if (getenv('DEBUG') == true)
+                {
+                    $logger->log("Skipping SNMP polling, as it is still pending.",Logger::ERROR);
+                }
+                $skipSnmpPolling = true;
             }
-            $skipSnmpPolling = true;
+        }
+        catch (Exception $e)
+        {
+            $logger->log("Could not instantiate Carbon from $snmpPollingStart", Logger::ERROR);
         }
     }
     if ($skipSnmpPolling === false)

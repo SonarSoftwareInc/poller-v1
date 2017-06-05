@@ -39,7 +39,7 @@ if (version_compare($currentVersion, $latestVersion) === -1)
         return;
     }
 
-    exec("/usr/bin/monit restart defaultQueue");
+    exec("/usr/bin/monit -g queues restart");
 
     TemporaryVariables::set("SNMP Polling Running",null);
     TemporaryVariables::set("ICMP Polling Running",null);

@@ -37,17 +37,22 @@ class DetermineDeviceMapping
             $lastDeviceMappingRun = TemporaryVariables::get("Device Mapping Running");
             if ($lastDeviceMappingRun != null)
             {
-                $lastDeviceMappingRunCarbon = new Carbon($lastDeviceMappingRun, "UTC");
-                if ($now->diffInMinutes($lastDeviceMappingRunCarbon) < $deviceMappingFrequency)
-                {
-                    if (getenv('DEBUG') == true)
+                try {
+                    $lastDeviceMappingRunCarbon = new Carbon($lastDeviceMappingRun, "UTC");
+                    if ($now->diffInMinutes($lastDeviceMappingRunCarbon) < $deviceMappingFrequency)
                     {
-                        $logger->log("Last device mapping cycle was less than $deviceMappingFrequency minutes ago, aborting.",Logger::INFO);
+                        if (getenv('DEBUG') == true)
+                        {
+                            $logger->log("Last device mapping cycle was less than $deviceMappingFrequency minutes ago, aborting.",Logger::INFO);
+                        }
+                        return;
                     }
-                    return;
+                }
+                catch (Exception $e)
+                {
+                    $logger->log("Could not instantiate Carbon from $lastDeviceMappingRun", Logger::ERROR);
                 }
             }
-
 
             if (getenv('DEBUG') == true)
             {

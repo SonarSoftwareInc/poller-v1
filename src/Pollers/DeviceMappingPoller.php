@@ -66,6 +66,9 @@ class DeviceMappingPoller
 
                 $myChunksWithDeviceType = $this->determineDeviceTypes($chunks[$i]);
 
+                $childFile = fopen("/tmp/$fileUniquePrefix" . $pid,"w");
+                $devices = [];
+
                 foreach ($myChunksWithDeviceType as $hostWithDeviceType)
                 {
                     try {
@@ -80,6 +83,8 @@ class DeviceMappingPoller
                                 $genericDeviceMapper = new GenericDeviceMapper($device);
                                 $device = $genericDeviceMapper->mapDevice();
                         }
+
+                        array_push($devices, $device->toArray());
                     }
                     catch (Exception $e)
                     {
@@ -87,6 +92,9 @@ class DeviceMappingPoller
                     }
                 }
 
+                fwrite($childFile,json_encode($devices));
+                fclose($childFile);
+                unset($devices);
 
                 exit();
             }
@@ -125,9 +133,7 @@ class DeviceMappingPoller
             }
         }
 
-        $formatter = new Formatter();
-        //TODO: Need to add a function here to format device mapping results
-        return $formatter->formatSnmpResultsFromSnmpClass($results, $work['hosts']);
+        return $results;
     }
 
     /**
