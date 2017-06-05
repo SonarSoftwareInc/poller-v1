@@ -3,31 +3,34 @@
 namespace SonarSoftware\Poller\DeviceMappers;
 
 use SonarSoftware\Poller\Models\Device;
-use SonarSoftware\Poller\Models\DeviceMappingResult;
 
-class GenericDeviceMapper implements DeviceMapperInterface
+class GenericDeviceMapper extends BaseDeviceMapper implements DeviceMapperInterface
 {
-    public function mapDevice(Device $device):DeviceMappingResult
+    public function __construct(Device $device)
+    {
+        parent::__construct($device);
+    }
+
+    public function mapDevice():Device
+    {
+        return $this->device;
+    }
+
+    private function checkForArp():Device
     {
 
     }
 
-    private function checkForArp(Device $device):Device
+    private function checkBridgingTable():Device
     {
 
     }
 
-    private function checkBridgingTable(Device $device):Device
+    private function getInterfaceNamesIndexedByInterfaceID():array
     {
-
     }
 
-    private function getInterfaceNamesIndexedByInterfaceID(Device $device):array
-    {
-
-    }
-
-    private function getInterfaceStatusIndexedByInterfaceID(Device $device):array
+    private function getInterfaceStatusIndexedByInterfaceID():array
     {
 
     }

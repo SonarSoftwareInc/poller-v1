@@ -66,18 +66,24 @@ class DeviceMappingPoller
 
                 $myChunksWithDeviceType = $this->determineDeviceTypes($chunks[$i]);
 
-                $genericDeviceMapper = new GenericDeviceMapper();
                 foreach ($myChunksWithDeviceType as $hostWithDeviceType)
                 {
-                    $device = new Device();
-                    $device->setId($hostWithDeviceType['id']);
-                    $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
+                    try {
+                        $device = new Device();
+                        $device->setId($hostWithDeviceType['id']);
+                        $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
 
-                    //Additional 'case' statements can be added here to break out querying to a separate device mapper
-                    switch ($hostWithDeviceType['type_query_result'])
+                        //Additional 'case' statements can be added here to break out querying to a separate device mapper
+                        switch ($hostWithDeviceType['type_query_result'])
+                        {
+                            default:
+                                $genericDeviceMapper = new GenericDeviceMapper($device);
+                                $device = $genericDeviceMapper->mapDevice();
+                        }
+                    }
+                    catch (Exception $e)
                     {
-                        default:
-                            $results = $genericDeviceMapper->mapDevice($device);
+                        continue;
                     }
                 }
 

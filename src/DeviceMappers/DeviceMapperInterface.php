@@ -3,9 +3,9 @@
 namespace SonarSoftware\Poller\DeviceMappers;
 
 use SonarSoftware\Poller\Models\Device;
-use SonarSoftware\Poller\Models\DeviceMappingResult;
 
 interface DeviceMapperInterface
 {
-    public function mapDevice(Device $device):DeviceMappingResult;
+    public function __construct(Device $device);
+    public function mapDevice():Device;
 }

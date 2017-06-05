@@ -7,9 +7,9 @@ use SNMP;
 
 class Device
 {
-    protected $interfaces = [];
-    protected $id;
-    protected $snmpObject;
+    private $interfaces = [];
+    private $id;
+    private $snmpObject;
 
     public function toArray():array
     {
