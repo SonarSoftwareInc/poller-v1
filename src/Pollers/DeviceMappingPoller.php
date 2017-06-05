@@ -13,11 +13,11 @@ use SonarSoftware\Poller\Services\SonarLogger;
 
 class DeviceMappingPoller
 {
-    protected $snmpForks;
-    protected $timeout;
-    protected $log;
-    protected $retries;
-    protected $templates;
+    private $snmpForks;
+    private $timeout;
+    private $log;
+    private $retries;
+    private $templates;
 
     /**
      * DeviceMappingPoller constructor.
@@ -47,11 +47,11 @@ class DeviceMappingPoller
         $this->templates = $work['templates'];
 
         $chunks = array_chunk($work['hosts'],ceil(count($work['hosts'])/$this->snmpForks));
+
         $results = [];
         $fileUniquePrefix = uniqid(true);
 
         $pids = [];
-
 
         for ($i = 0; $i < count($chunks); $i++)
         {
@@ -66,7 +66,7 @@ class DeviceMappingPoller
 
                 $myChunksWithDeviceType = $this->determineDeviceTypes($chunks[$i]);
 
-                $childFile = fopen("/tmp/$fileUniquePrefix" . $pid,"w");
+                $childFile = fopen("/tmp/$fileUniquePrefix" . "_". $i,"w");
                 $devices = [];
 
                 foreach ($myChunksWithDeviceType as $hostWithDeviceType)
@@ -82,12 +82,17 @@ class DeviceMappingPoller
                             default:
                                 $genericDeviceMapper = new GenericDeviceMapper($device);
                                 $device = $genericDeviceMapper->mapDevice();
+                                break;
                         }
 
                         array_push($devices, $device->toArray());
                     }
                     catch (Exception $e)
                     {
+                        if (getenv('DEBUG') == true)
+                        {
+                            $this->log->log("Failed to get mappings from {$hostWithDeviceType['ip']}, got {$e->getMessage()}",Logger::ERROR);
+                        }
                         continue;
                     }
                 }
@@ -125,12 +130,9 @@ class DeviceMappingPoller
             if (is_array($output))
             {
                 $results = array_merge($results,$output);
-                unlink($file);
+
             }
-            else
-            {
-                $this->log->log("Couldn't open $file",Logger::INFO);
-            }
+            unlink($file);
         }
 
         return $results;
@@ -155,6 +157,10 @@ class DeviceMappingPoller
             }
             catch (Exception $e)
             {
+                if (getenv('DEBUG') == true)
+                {
+                    $this->log->log("Failed to get device type from {$host['ip']}, got {$e->getMessage()}",Logger::ERROR);
+                }
                 continue;
             }
         }

@@ -20,7 +20,7 @@ abstract class BaseDeviceMapper
      */
     protected function buildInitialInterfaceArray():array
     {
-        $result = $this->snmp->walk("1.3.6.1.2.1.31.1.1.1.1");
+        $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.2");
         $interfaces = [];
         foreach ($result as $key => $datum)
         {
