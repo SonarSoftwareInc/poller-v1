@@ -11,6 +11,9 @@ class Device
     private $id;
     private $snmpObject;
 
+    /**
+     * @return array
+     */
     public function toArray():array
     {
         $structure = [

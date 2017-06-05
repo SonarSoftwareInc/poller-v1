@@ -205,4 +205,34 @@ class Formatter
         }
         return (float)round($median,2);
     }
+
+    /**
+     * Format a MAC in a standard format
+     * @param string $mac
+     * @return string
+     */
+    public static function formatMac(string $mac):string
+    {
+        //Sometimes, MACs are provided in a format where they are colon separated, but missing leading zeroes.
+        if (strpos($mac,":") !== false)
+        {
+            $fixedMac = [];
+            $boom = explode(":",$mac);
+            foreach ($boom as $shard)
+            {
+                if (strlen($shard) == 1)
+                {
+                    $shard = "0" . $shard;
+                }
+                array_push($fixedMac,$shard);
+            }
+            $mac = implode(":",$fixedMac);
+        }
+        $cleanMac = str_replace(" ","",$mac);
+        $cleanMac = str_replace("-","",$cleanMac);
+        $cleanMac = str_replace(":","",$cleanMac);
+        $cleanMac = strtoupper($cleanMac);
+        $macSplit = str_split($cleanMac,2);
+        return implode(":",$macSplit);
+    }
 }

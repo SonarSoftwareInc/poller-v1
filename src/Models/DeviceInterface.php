@@ -3,6 +3,7 @@
 namespace SonarSoftware\Poller\Models;
 
 use InvalidArgumentException;
+use SonarSoftware\Poller\Formatters\Formatter;
 
 class DeviceInterface
 {
@@ -15,7 +16,7 @@ class DeviceInterface
      * Convert this interface to an array
      * @return array
      */
-    public function asArray():array
+    public function toArray():array
     {
         return [
             'up' => (bool)$this->up,
@@ -64,7 +65,7 @@ class DeviceInterface
      */
     public function setMacAddress($macAddress)
     {
-        $macAddress = $this->formatMac($macAddress);
+        $macAddress = Formatter::formatMac($macAddress);
         if ($this->validateMac($macAddress) === false)
         {
             throw new InvalidArgumentException($macAddress . " is not a valid MAC address.");
@@ -88,7 +89,7 @@ class DeviceInterface
         $cleanedMacs = [];
         foreach ($connectedMacs as $connectedMac)
         {
-            $connectedMac = $this->formatMac($connectedMac);
+            $connectedMac = Formatter::formatMac($connectedMac);
             if ($this->validateMac($connectedMac) === false)
             {
                 throw new InvalidArgumentException($connectedMac . " is not a valid MAC address.");
@@ -114,20 +115,5 @@ class DeviceInterface
     private function validateMac(string $mac):bool
     {
         return preg_match('/^([A-F0-9]{2}:){5}[A-F0-9]{2}$/', $mac) == 1;
-    }
-
-    /**
-     * Format a randomly formatted MAC into a well formatted MAC
-     * @param $mac
-     * @return string
-     */
-    private function formatMac(string $mac):string
-    {
-        $cleanMac = str_replace(" ","",$mac);
-        $cleanMac = str_replace("-","",$cleanMac);
-        $cleanMac = str_replace(":","",$cleanMac);
-        $cleanMac = strtoupper($cleanMac);
-        $macSplit = str_split($cleanMac,2);
-        return implode(":",$macSplit);
     }
 }
