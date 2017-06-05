@@ -157,7 +157,7 @@ abstract class BaseDeviceMapper
                 $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
                 if ($this->validateMac($mac))
                 {
-                    array_push($interfacesIndexedByInterfaceID[$boom[count($boom)-5]]['connected'],$mac);
+                    array_push($interfacesIndexedByInterfaceID[$boom[count($boom)-5]]['connected_l3'],$mac);
                 }
             }
         }
@@ -203,7 +203,7 @@ abstract class BaseDeviceMapper
                 {
                     if (isset($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]))
                     {
-                        array_push($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]['connected'],$macAddress);
+                        array_push($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]['connected_l2'],$macAddress);
                     }
                 }
             }
