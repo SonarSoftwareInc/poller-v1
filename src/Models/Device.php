@@ -9,6 +9,7 @@ class Device
 {
     private $interfaces = [];
     private $id;
+    private $metadata = [];
     private $snmpObject;
 
     /**
@@ -18,6 +19,7 @@ class Device
     {
         $structure = [
             'id' => $this->id,
+            'metadata' => $this->metadata,
             'interfaces' => [],
         ];
 
@@ -68,6 +70,22 @@ class Device
             }
         }
         $this->interfaces = $interfaces;
+    }
+
+    /**
+     * @param array $metadata
+     */
+    public function setMetadata(array $metadata)
+    {
+        $this->metadata = $metadata;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMetadata():array
+    {
+        return $this->metadata;
     }
 
     /**

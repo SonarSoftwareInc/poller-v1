@@ -18,6 +18,50 @@ abstract class BaseDeviceMapper
     }
 
     /**
+     * Set system metadata on the device object
+     */
+    protected function setSystemMetadataOnDevice()
+    {
+        $metadata = [];
+        try {
+            $result = $this->snmp->walk("1.3.6.1.2.1.1");
+            foreach ($result as $key => $datum)
+            {
+                switch (ltrim($key,"."))
+                {
+                    case "1.3.6.1.2.1.1.1.0":
+                        //Descr
+                        $metadata['description'] = $this->cleanSnmpResult($datum);
+                        break;
+                    case "1.3.6.1.2.1.1.3.0":
+                        //Uptime
+                        $metadata['uptime'] = $this->cleanSnmpResult($datum);
+                        break;
+                    case "1.3.6.1.2.1.1.4.0":
+                        //Contact
+                        $metadata['contact'] = $this->cleanSnmpResult($datum);
+                        break;
+                    case "1.3.6.1.2.1.1.5.0":
+                        //Name
+                        $metadata['name'] = $this->cleanSnmpResult($datum);
+                        break;
+                    case "1.3.6.1.2.1.1.6.0":
+                        //Location
+                        $metadata['location'] = $this->cleanSnmpResult($datum);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        catch (Exception $e)
+        {
+            //
+        }
+        $this->device->setMetadata($metadata);
+    }
+
+    /**
      * @param bool $getArp
      * @param bool $getBridgingTable
      * @param bool $getIpv4

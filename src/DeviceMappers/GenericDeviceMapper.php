@@ -23,6 +23,7 @@ class GenericDeviceMapper extends BaseDeviceMapper implements DeviceMapperInterf
      */
     public function mapDevice():Device
     {
+        $this->setSystemMetadataOnDevice();
         $deviceInterfaces = $this->getInterfacesWithStandardMibData();
         $this->device->setInterfaces($deviceInterfaces);
 

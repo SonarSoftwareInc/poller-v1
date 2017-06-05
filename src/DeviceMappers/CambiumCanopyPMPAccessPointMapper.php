@@ -11,7 +11,8 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
 {
     public function mapDevice():Device
     {
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getInterfacesWithStandardMibData(true, false, true);
+        $this->setSystemMetadataOnDevice();
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getInterfacesWithStandardMibData(true, false);
         $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getConnectedSms($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
         $this->device->setInterfaces($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
 
