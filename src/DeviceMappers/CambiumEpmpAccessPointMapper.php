@@ -25,7 +25,7 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
      */
     private function getConnectedRadios(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
     {
-        $result = $this->snmp->walk("1.3.6.1.4.1.17713.21.1.2.11.1.1");
+        $result = $this->snmp->walk("1.3.6.1.4.1.17713.21.1.2.30.1.1");
         foreach ($result as $key => $datum)
         {
             $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
