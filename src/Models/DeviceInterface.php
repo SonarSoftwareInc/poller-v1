@@ -7,10 +7,11 @@ use SonarSoftware\Poller\Formatters\Formatter;
 
 class DeviceInterface
 {
-    protected $up;
-    protected $metadata = [];
-    protected $macAddress;
-    protected $connectedMacs = [];
+    private $up;
+    private $metadata = [];
+    private $macAddress;
+    private $connectedMacs = [];
+    private $description;
 
     /**
      * Convert this interface to an array
@@ -20,10 +21,28 @@ class DeviceInterface
     {
         return [
             'up' => (bool)$this->up,
+            'description' => $this->description,
             'metadata' => $this->metadata,
             'mac_address' => $this->macAddress,
             'connected' => $this->connectedMacs,
         ];
+    }
+
+    /**
+     * Set the name/description of the interface
+     */
+    public function setDescription(string $description)
+    {
+        $this->description = $description;
+    }
+
+    /**
+     * Get the name/description of the interface
+     * @return mixed
+     */
+    public function getDescription():string
+    {
+        return $this->description;
     }
 
     /**

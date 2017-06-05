@@ -53,14 +53,22 @@ class GenericDeviceMapper extends BaseDeviceMapper implements DeviceMapperInterf
         {
             //
         }
+        try {
+            $interfacesIndexedByInterfaceID = $this->getIpv4Addresses($interfacesIndexedByInterfaceID);
+        }
+        catch (Exception $e)
+        {
+            //
+        }
 
         $deviceInterfaces = [];
         foreach ($interfacesIndexedByInterfaceID as $interface)
         {
             $deviceInterface = new DeviceInterface();
             $deviceInterface->setUp($interface['status']);
+            $deviceInterface->setDescription($interface['name']);
             $deviceInterface->setMetadata([
-                'description' => $interface['name'],
+                'ip_addresses' => $interface['ip_addresses'],
             ]);
             if ($this->validateMac($interface['mac_address']))
             {
