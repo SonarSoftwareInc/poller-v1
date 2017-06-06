@@ -13,7 +13,8 @@
         "monolog/monolog": "^1.22",
         "nesbot/carbon": "^1.21",
         "predis/predis": "^1.1",
-        "psy/psysh": "@stable"
+        "psy/psysh": "@stable",
+        "leth/ip-address": "^1.1"
     },
     "autoload": {
         "psr-4" : {

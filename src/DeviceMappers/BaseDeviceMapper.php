@@ -3,6 +3,8 @@
 namespace SonarSoftware\Poller\DeviceMappers;
 
 use Exception;
+use Leth\IPAddress\IP\Address;
+use Leth\IPAddress\IP\NetworkAddress;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Models\DeviceInterface;
@@ -62,12 +64,13 @@ abstract class BaseDeviceMapper
     }
 
     /**
-     * @param bool $getArp
-     * @param bool $getBridgingTable
-     * @param bool $getIpv4
+     * @param bool $getArp - Read the ARP table
+     * @param bool $getBridgingTable - Read the bridging table
+     * @param bool $getIpv4 - Get IPv4 addresses
+     * @param bool $getIpv6 - Get IPv6 addresses
      * @return array
      */
-    protected function getInterfacesWithStandardMibData($getArp = true, $getBridgingTable = true, $getIpv4 = true):array
+    protected function getInterfacesWithStandardMibData($getArp = true, $getBridgingTable = true, $getIpv4 = true, $getIpv6 = true):array
     {
         $interfacesIndexedByInterfaceID = $this->buildInitialInterfaceArray();
         try {
@@ -99,6 +102,17 @@ abstract class BaseDeviceMapper
         {
             try {
                 $interfacesIndexedByInterfaceID = $this->getIpv4Addresses($interfacesIndexedByInterfaceID);
+            }
+            catch (Exception $e)
+            {
+                //
+            }
+        }
+
+        if ($getIpv6 === true)
+        {
+            try {
+                $interfacesIndexedByInterfaceID = $this->getIpv6Addresses($interfacesIndexedByInterfaceID);
             }
             catch (Exception $e)
             {
@@ -308,6 +322,56 @@ abstract class BaseDeviceMapper
                     break;
                 case 3:
                     $resultsToBeInserted[$boom[1]]['subnet'] = $this->maskToCidr($this->cleanSnmpResult($datum));
+                    break;
+                default:
+                    continue;
+            }
+        }
+
+        foreach ($resultsToBeInserted as $resultToBeInserted)
+        {
+            if (isset($interfacesIndexedByInterfaceID[$resultToBeInserted['index']]))
+            {
+                array_push($interfacesIndexedByInterfaceID[$resultToBeInserted['index']]['ip_addresses'],$resultToBeInserted['ip'] . "/" . $resultToBeInserted['subnet']);
+            }
+        }
+
+        return $interfacesIndexedByInterfaceID;
+    }
+
+    /**
+     * @param array $interfacesIndexedByInterfaceID
+     * @return array
+     */
+    protected function getIpv6Addresses(array $interfacesIndexedByInterfaceID):array
+    {
+        $result = $this->snmp->walk("1.3.6.1.2.1.55.1.8");
+        $resultsToBeInserted = [];
+
+        foreach ($result as $key => $datum)
+        {
+            $key = ltrim($key,".");
+            $key = str_replace("1.3.6.1.2.1.55.1.8.1.","",$key);
+            $boom = explode(".",$key,3);
+
+            if (!isset($resultsToBeInserted[$boom[1]]))
+            {
+                $resultsToBeInserted[$boom[1]] = [
+                    'ip' => null,
+                    'index' => $boom[1],
+                    'subnet' => null,
+                ];
+            }
+
+            switch ($boom[0])
+            {
+                //If $boom[0] is 1, it's the IP. If 2, it's the prefix.
+                case 1:
+                    $address = Address::factory($this->cleanSnmpResult($datum));
+                    $resultsToBeInserted[$boom[1]]['ip'] = $address->__toString();
+                    break;
+                case 2:
+                    $resultsToBeInserted[$boom[1]]['subnet'] = preg_replace("/[^0-9]/", "", $this->cleanSnmpResult($datum));
                     break;
                 default:
                     continue;

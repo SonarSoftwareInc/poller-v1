@@ -8,6 +8,8 @@ $baseDir = dirname($vendorDir);
 return array(
     'Resque' => array($vendorDir . '/chrisboulton/php-resque/lib'),
     'Prophecy\\' => array($vendorDir . '/phpspec/prophecy/src'),
+    'Math_' => array($vendorDir . '/pear/math_biginteger'),
+    'Leth\\IPAddress' => array($vendorDir . '/leth/ip-address/classes'),
     'JakubOnderka\\PhpConsoleHighlighter' => array($vendorDir . '/jakub-onderka/php-console-highlighter/src'),
     'JakubOnderka\\PhpConsoleColor' => array($vendorDir . '/jakub-onderka/php-console-color/src'),
     'Behat\\Gherkin' => array($vendorDir . '/behat/gherkin/src'),

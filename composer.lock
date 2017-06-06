@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "e3de6f74e6a265de51ff245c8e51f0f4",
-    "content-hash": "d31330d7dc39a34989f4a0f2f33658a0",
+    "hash": "f5336f2bfaf56635817caae7136f8ef1",
+    "content-hash": "909425ef144ddbf77a65877fc29d5ec2",
     "packages": [
         {
             "name": "behat/gherkin",
@@ -650,6 +650,36 @@
             "time": "2016-04-04 20:24:59"
         },
         {
+            "name": "leth/ip-address",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/leth/PHP-IPAddress.git",
+                "reference": "00d9feb30d73e78fbae522ba21139ab6ea9db09b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/leth/PHP-IPAddress/zipball/00d9feb30d73e78fbae522ba21139ab6ea9db09b",
+                "reference": "00d9feb30d73e78fbae522ba21139ab6ea9db09b",
+                "shasum": ""
+            },
+            "require": {
+                "pear/math_biginteger": "1.0.3"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Leth\\IPAddress": "classes/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0"
+            ],
+            "description": "IPv4 and IPv6 address and subnet classes with awesome utility functions.",
+            "time": "2016-04-12 19:59:07"
+        },
+        {
             "name": "monolog/monolog",
             "version": "1.22.1",
             "source": {
@@ -872,6 +902,55 @@
                 "php"
             ],
             "time": "2017-03-05 18:23:57"
+        },
+        {
+            "name": "pear/math_biginteger",
+            "version": "v1.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pear/Math_BigInteger.git",
+                "reference": "33d4357543037a458fad3e8c837a01b93104e592"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pear/Math_BigInteger/zipball/33d4357543037a458fad3e8c837a01b93104e592",
+                "reference": "33d4357543037a458fad3e8c837a01b93104e592",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pcre": "*",
+                "php": ">=4.2.0"
+            },
+            "suggest": {
+                "ext-bcmath": "Allows using the BCMath extension internally for computation. Faster than native implementation.",
+                "ext-gmp": "Allows using the GNU Multiple Precision extension internally for computation. If you are doing a lot of computation this is the recommended extension."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Math_": "./"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jim Wigginton",
+                    "email": "terrafrost@php.net"
+                }
+            ],
+            "description": "Pure-PHP arbitrary precission integer arithmetic library. If GMP or BCMath are available they are used.",
+            "homepage": "https://github.com/pear/Math_BigInteger",
+            "keywords": [
+                "arbitrary",
+                "bcmath",
+                "gmp",
+                "integer",
+                "precision"
+            ],
+            "time": "2016-04-12 05:46:52"
         },
         {
             "name": "phar-io/manifest",

@@ -3349,5 +3349,88 @@
             "interactive",
             "shell"
         ]
+    },
+    {
+        "name": "pear/math_biginteger",
+        "version": "v1.0.3",
+        "version_normalized": "1.0.3.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/pear/Math_BigInteger.git",
+            "reference": "33d4357543037a458fad3e8c837a01b93104e592"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/pear/Math_BigInteger/zipball/33d4357543037a458fad3e8c837a01b93104e592",
+            "reference": "33d4357543037a458fad3e8c837a01b93104e592",
+            "shasum": ""
+        },
+        "require": {
+            "ext-pcre": "*",
+            "php": ">=4.2.0"
+        },
+        "suggest": {
+            "ext-bcmath": "Allows using the BCMath extension internally for computation. Faster than native implementation.",
+            "ext-gmp": "Allows using the GNU Multiple Precision extension internally for computation. If you are doing a lot of computation this is the recommended extension."
+        },
+        "time": "2016-04-12 05:46:52",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Math_": "./"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Jim Wigginton",
+                "email": "terrafrost@php.net"
+            }
+        ],
+        "description": "Pure-PHP arbitrary precission integer arithmetic library. If GMP or BCMath are available they are used.",
+        "homepage": "https://github.com/pear/Math_BigInteger",
+        "keywords": [
+            "arbitrary",
+            "bcmath",
+            "gmp",
+            "integer",
+            "precision"
+        ]
+    },
+    {
+        "name": "leth/ip-address",
+        "version": "1.1.1",
+        "version_normalized": "1.1.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/leth/PHP-IPAddress.git",
+            "reference": "00d9feb30d73e78fbae522ba21139ab6ea9db09b"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/leth/PHP-IPAddress/zipball/00d9feb30d73e78fbae522ba21139ab6ea9db09b",
+            "reference": "00d9feb30d73e78fbae522ba21139ab6ea9db09b",
+            "shasum": ""
+        },
+        "require": {
+            "pear/math_biginteger": "1.0.3"
+        },
+        "time": "2016-04-12 19:59:07",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Leth\\IPAddress": "classes/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "LGPL-3.0"
+        ],
+        "description": "IPv4 and IPv6 address and subnet classes with awesome utility functions."
     }
 ]
