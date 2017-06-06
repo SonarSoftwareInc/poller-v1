@@ -97,7 +97,6 @@ class DeviceMappingPoller
                         }
 
                         $device = $mapper->mapDevice();
-
                         array_push($devices, $device->toArray());
                     }
                     catch (Exception $e)
@@ -165,7 +164,7 @@ class DeviceMappingPoller
             try {
                 $result = $snmpObject->get("1.3.6.1.2.1.1.2.0");
                 $result = explode(":",$result);
-                $host['type_query_result'] = trim(ltrim($result[1],"."));
+                $host['type_query_result'] = ltrim(trim($result[1]),'.');
                 array_push($updatedChunks,$host);
             }
             catch (Exception $e)
