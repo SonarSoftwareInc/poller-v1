@@ -26,6 +26,16 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
      */
     private function getConnectedSms(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
     {
+        $keyToUse = 0;
+        foreach ($arrayOfDeviceInterfacesIndexedByInterfaceIndex as $key => $deviceInterface)
+        {
+            if (strpos($deviceInterface->getDescription(),"MultiPoint") !== false)
+            {
+                $keyToUse = $key;
+                break;
+            }
+        }
+
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.161.19.3.1.4.1.3");
             foreach ($result as $key => $datum)
@@ -33,7 +43,7 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
                 $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
                 if ($this->validateMac($mac))
                 {
-                    array_push($arrayOfDeviceInterfacesIndexedByInterfaceIndex[count($arrayOfDeviceInterfacesIndexedByInterfaceIndex)-1]['connected_l2'],$mac);
+                    array_push($arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]['connected_l2'],$mac);
                 }
             }
         }
