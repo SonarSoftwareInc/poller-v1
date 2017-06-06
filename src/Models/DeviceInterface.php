@@ -140,11 +140,24 @@ class DeviceInterface
 
     /**
      * Returns an array of connected MAC addresses
+     * @param string $layer
      * @return array
      */
-    public function getConnectedMacs():array
+    public function getConnectedMacs(string $layer):array
     {
-        return $this->connectedMacs;
+        if (!in_array($layer,[$this::LAYER2, $this::LAYER3]))
+        {
+            throw new InvalidArgumentException("Layer must be one of the layer constants.");
+        }
+        switch ($layer)
+        {
+            case $this::LAYER2:
+                return $this->connectedMacsLayer2;
+                break;
+            case $this::LAYER3:
+                return $this->connectedMacsLayer3;
+                break;
+        }
     }
 
     /**

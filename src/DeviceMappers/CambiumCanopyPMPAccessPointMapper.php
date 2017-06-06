@@ -36,6 +36,8 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
             }
         }
 
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER2);
+
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.161.19.3.1.4.1.3");
             foreach ($result as $key => $datum)
@@ -43,14 +45,16 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
                 $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
                 if ($this->validateMac($mac))
                 {
-                    array_push($arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]['connected_l2'],$mac);
+                    array_push($existingMacs,$mac);
                 }
             }
         }
         catch (Exception $e)
         {
-            //
+            echo $e->getMessage();
         }
+
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER2);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }

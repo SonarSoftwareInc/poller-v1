@@ -5,6 +5,7 @@ namespace SonarSoftware\Poller\DeviceMappers;
 use Exception;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
+use SonarSoftware\Poller\Models\DeviceInterface;
 
 class UbiquitiAirMaxAccessPointMapper extends BaseDeviceMapper implements DeviceMapperInterface
 {
@@ -34,6 +35,8 @@ class UbiquitiAirMaxAccessPointMapper extends BaseDeviceMapper implements Device
             }
         }
 
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER2);
+
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.41112.1.4.7.1.1");
             foreach ($result as $key => $datum)
@@ -41,7 +44,7 @@ class UbiquitiAirMaxAccessPointMapper extends BaseDeviceMapper implements Device
                 $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
                 if ($this->validateMac($mac))
                 {
-                    array_push($arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]['connected_l2'],$mac);
+                    array_push($existingMacs,$mac);
                 }
             }
         }
@@ -49,6 +52,9 @@ class UbiquitiAirMaxAccessPointMapper extends BaseDeviceMapper implements Device
         {
             //
         }
+
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER2);
+
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
 }

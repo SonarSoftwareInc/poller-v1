@@ -5,6 +5,7 @@ namespace SonarSoftware\Poller\DeviceMappers;
 use Exception;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
+use SonarSoftware\Poller\Models\DeviceInterface;
 
 class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMapperInterface
 {
@@ -36,6 +37,8 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
             }
         }
 
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER2);
+
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.17713.21.1.2.30.1.1");
             foreach ($result as $key => $datum)
@@ -43,7 +46,7 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
                 $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
                 if ($this->validateMac($mac))
                 {
-                    array_push($arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]['connected_l2'],$mac);
+                    array_push($existingMacs,$mac);
                 }
             }
         }
@@ -51,6 +54,9 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
         {
             //
         }
+
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER2);
+
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
 }
