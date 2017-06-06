@@ -102,7 +102,7 @@ class DeviceMappingPoller
                     }
                     catch (Exception $e)
                     {
-                        if (getenv('DEBUG') == true)
+                        if (getenv('DEBUG') == "true")
                         {
                             $this->log->log("Failed to get mappings from {$hostWithDeviceType['ip']}, got {$e->getMessage()}",Logger::ERROR);
                         }
@@ -170,7 +170,7 @@ class DeviceMappingPoller
             }
             catch (Exception $e)
             {
-                if (getenv('DEBUG') == true)
+                if (getenv('DEBUG') == "true")
                 {
                     $this->log->log("Failed to get device type from {$host['ip']}, got {$e->getMessage()}",Logger::ERROR);
                 }

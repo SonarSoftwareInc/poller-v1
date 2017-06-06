@@ -26,7 +26,7 @@ class PerformSnmpGets
             $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
             $dotenv->load();
 
-            if (getenv('DEBUG') == true)
+            if (getenv('DEBUG') == "true")
             {
                 $logger->log("Starting SNMP polling cycle.",Logger::INFO);
             }
@@ -69,7 +69,7 @@ class PerformSnmpGets
                 throw $e;
             }
 
-            if (getenv('DEBUG') == true)
+            if (getenv('DEBUG') == "true")
             {
                 $logger->log("Finished SNMP polling cycle.",Logger::INFO);
             }

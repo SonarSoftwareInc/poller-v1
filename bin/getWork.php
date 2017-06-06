@@ -41,7 +41,7 @@ try {
 catch (Exception $e)
 {
     $climate->shout("Failed to get work from Sonar and enqueue it - {$e->getMessage()}");
-    if (getenv('DEBUG') == true)
+    if (getenv('DEBUG') == "true")
     {
         $logger->log("Failed to get work from Sonar and enqueue it - {$e->getMessage()}",Logger::ERROR);
     }
@@ -90,7 +90,7 @@ function getWorkFromSonar():stdClass
         throw new RuntimeException($e->getMessage());
     }
 
-    if (getenv('DEBUG') == true)
+    if (getenv('DEBUG') == "true")
     {
         $logger->log("Obtained work from Sonar, queueing..",Logger::INFO);
     }
@@ -133,7 +133,7 @@ function queueIcmpWork(stdClass $contents, Carbon $now)
             if ($now->diffInMinutes($icmpPollingStartCarbon) < 30)
             {
                 $climate->shout("Skipping ICMP polling, as it is still pending.");
-                if (getenv('DEBUG') == true)
+                if (getenv('DEBUG') == "true")
                 {
                     $logger->log("Skipping ICMP polling, as it is still pending.",Logger::ERROR);
                 }
@@ -175,7 +175,7 @@ function queueSnmpWork(stdClass $contents, Carbon $now)
             if ($now->diffInMinutes($snmpPollingStartCarbon) < 30)
             {
                 $climate->shout("Skipping SNMP polling, as it is still pending.");
-                if (getenv('DEBUG') == true)
+                if (getenv('DEBUG') == "true")
                 {
                     $logger->log("Skipping SNMP polling, as it is still pending.",Logger::ERROR);
                 }

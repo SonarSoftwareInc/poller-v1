@@ -26,7 +26,7 @@ class PerformIcmpPolling
             $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
             $dotenv->load();
 
-            if (getenv('DEBUG') == true)
+            if (getenv('DEBUG') == "true")
             {
                 $logger->log("Starting ICMP polling cycle.",Logger::INFO);
             }
@@ -69,7 +69,7 @@ class PerformIcmpPolling
                 return;
             }
 
-            if (getenv('DEBUG') == true)
+            if (getenv('DEBUG') == "true")
             {
                 $logger->log("Finished ICMP polling cycle.",Logger::INFO);
             }

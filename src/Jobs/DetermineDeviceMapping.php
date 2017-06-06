@@ -41,7 +41,7 @@ class DetermineDeviceMapping
                     $lastDeviceMappingRunCarbon = new Carbon($lastDeviceMappingRun, "UTC");
                     if ($now->diffInMinutes($lastDeviceMappingRunCarbon) < $deviceMappingFrequency)
                     {
-                        if (getenv('DEBUG') == true)
+                        if (getenv('DEBUG') == "true")
                         {
                             $logger->log("Last device mapping cycle was less than $deviceMappingFrequency minutes ago, aborting.",Logger::INFO);
                         }
@@ -54,7 +54,7 @@ class DetermineDeviceMapping
                 }
             }
 
-            if (getenv('DEBUG') == true)
+            if (getenv('DEBUG') == "true")
             {
                 $logger->log("Starting device mapping cycle.",Logger::INFO);
             }
@@ -98,7 +98,7 @@ class DetermineDeviceMapping
                 return;
             }
 
-            if (getenv('DEBUG') == true)
+            if (getenv('DEBUG') == "true")
             {
                 $logger->log("Finished device mapping cycle.",Logger::INFO);
             }
