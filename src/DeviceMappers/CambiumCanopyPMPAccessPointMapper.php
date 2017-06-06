@@ -51,7 +51,7 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
         }
         catch (Exception $e)
         {
-            echo $e->getMessage();
+            //
         }
 
         $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER2);
