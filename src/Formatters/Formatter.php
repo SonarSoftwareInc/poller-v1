@@ -231,6 +231,8 @@ class Formatter
         $cleanMac = str_replace(" ","",$mac);
         $cleanMac = str_replace("-","",$cleanMac);
         $cleanMac = str_replace(":","",$cleanMac);
+        $cleanMac = str_replace("\"","",$cleanMac);
+        $cleanMac = str_replace("'","",$cleanMac);
         $cleanMac = strtoupper($cleanMac);
         $macSplit = str_split($cleanMac,2);
         return implode(":",$macSplit);
