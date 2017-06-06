@@ -37,13 +37,27 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
         }
 
         $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER2);
+        $registeredStates = [];
 
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.161.19.3.1.4.1.3");
+            $states = $this->snmp->walk("1.3.6.1.4.1.161.19.3.1.4.1.19");
+
+            foreach ($states as $stateKey => $state)
+            {
+                $state = $this->cleanSnmpResult($state);
+                if ($state == 1)
+                {
+                    $boom = explode(".",$stateKey);
+                    array_push($registeredStates,$boom[count($boom)-1]);
+                }
+            }
+
             foreach ($result as $key => $datum)
             {
+                $boom = explode(".",$key);
                 $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                if ($this->validateMac($mac))
+                if ($this->validateMac($mac) && in_array($registeredStates,$boom[count($boom)-1]))
                 {
                     array_push($existingMacs,$mac);
                 }
