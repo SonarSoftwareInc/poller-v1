@@ -105,7 +105,6 @@ abstract class BaseDeviceMapper
             }
             catch (Exception $e)
             {
-                echo $e->getMessage() . "\n";
                 if (getenv("DEBUG") == "true")
                 {
                     $this->log->log("Failed to get ARP for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
