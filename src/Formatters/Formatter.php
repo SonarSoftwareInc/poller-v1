@@ -2,6 +2,7 @@
 
 namespace SonarSoftware\Poller\Formatters;
 
+use InvalidArgumentException;
 use stdClass;
 
 class Formatter
@@ -228,12 +229,12 @@ class Formatter
             }
             $mac = implode(":",$fixedMac);
         }
-        $cleanMac = str_replace(" ","",$mac);
-        $cleanMac = str_replace("-","",$cleanMac);
-        $cleanMac = str_replace(":","",$cleanMac);
-        $cleanMac = str_replace("\"","",$cleanMac);
-        $cleanMac = str_replace("'","",$cleanMac);
-        $cleanMac = strtoupper($cleanMac);
+
+        $cleanMac = strtoupper(preg_replace("/[^A-Fa-f0-9]/", '', $mac));
+        if (strlen($cleanMac) !== 12)
+        {
+            throw new InvalidArgumentException("$mac cannot be converted to a 12 character MAC address.");
+        }
         $macSplit = str_split($cleanMac,2);
         return implode(":",$macSplit);
     }
