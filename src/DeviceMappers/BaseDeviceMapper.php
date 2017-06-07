@@ -131,32 +131,33 @@ abstract class BaseDeviceMapper
             }
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = [];
-        foreach ($interfacesIndexedByInterfaceID as $interfaceIndex => $interface)
-        {
-            $deviceInterface = new DeviceInterface();
-            $deviceInterface->setUp($interface['status']);
-            $deviceInterface->setDescription($interface['name']);
-            $deviceInterface->setMetadata([
-                'ip_addresses' => $interface['ip_addresses'],
-            ]);
-            if ($this->validateMac($interface['mac_address']))
-            {
-                $deviceInterface->setMacAddress($interface['mac_address']);
-            }
+        return $this->buildDeviceInterfaceObjectsFromResults($interfacesIndexedByInterfaceID);
+    }
 
-            $deviceInterface->setConnectedMacs(array_unique($interface['connected_l2']),DeviceInterface::LAYER2);
-            $deviceInterface->setConnectedMacs(array_unique($interface['connected_l3']),DeviceInterface::LAYER3);
-            $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$interfaceIndex] = $deviceInterface;
-        }
+    /**
+     * Remove the prefix from an SNMP result
+     * @param string $result
+     * @return string
+     */
+    protected function cleanSnmpResult(string $result):string
+    {
+        $boom = explode(":",$result,2);
+        return trim($boom[1]);
+    }
 
-        return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
+    /**
+     * @param string $mac
+     * @return bool
+     */
+    protected function validateMac(string $mac):bool
+    {
+        return preg_match('/^([A-F0-9]{2}:){5}[A-F0-9]{2}$/', $mac) == 1;
     }
 
     /**
      * @return array
      */
-    protected function buildInitialInterfaceArray():array
+    private function buildInitialInterfaceArray():array
     {
         $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.2");
         $interfaces = [];
@@ -179,7 +180,7 @@ abstract class BaseDeviceMapper
      * @param array $interfacesIndexedByInterfaceID
      * @return array
      */
-    protected function getInterfaceMacAddresses(array $interfacesIndexedByInterfaceID):array
+    private function getInterfaceMacAddresses(array $interfacesIndexedByInterfaceID):array
     {
         $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.6");
         foreach ($result as $key => $datum)
@@ -203,7 +204,7 @@ abstract class BaseDeviceMapper
      * @param array $interfacesIndexedByInterfaceID
      * @return array
      */
-    protected function getArp(array $interfacesIndexedByInterfaceID):array
+    private function getArp(array $interfacesIndexedByInterfaceID):array
     {
         $result = $this->snmp->walk("1.3.6.1.2.1.4.22.1.2");
         foreach ($result as $key => $datum)
@@ -227,7 +228,7 @@ abstract class BaseDeviceMapper
      * @param array $interfacesIndexedByInterfaceID
      * @return array
      */
-    protected function getBridgingTable(array $interfacesIndexedByInterfaceID):array
+    private function getBridgingTable(array $interfacesIndexedByInterfaceID):array
     {
         $mappings = [];
 
@@ -274,7 +275,7 @@ abstract class BaseDeviceMapper
      * @param array $interfacesIndexedByInterfaceID
      * @return array
      */
-    protected function getInterfaceStatus(array $interfacesIndexedByInterfaceID):array
+    private function getInterfaceStatus(array $interfacesIndexedByInterfaceID):array
     {
         $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.8");
         foreach ($result as $key => $datum)
@@ -292,7 +293,7 @@ abstract class BaseDeviceMapper
      * @param array $interfacesIndexedByInterfaceID
      * @return array
      */
-    protected function getIpv4Addresses(array $interfacesIndexedByInterfaceID):array
+    private function getIpv4Addresses(array $interfacesIndexedByInterfaceID):array
     {
         $result = $this->snmp->walk("1.3.6.1.2.1.4.20.1");
         $resultsToBeInserted = [];
@@ -343,7 +344,7 @@ abstract class BaseDeviceMapper
      * @param array $interfacesIndexedByInterfaceID
      * @return array
      */
-    protected function getIpv6Addresses(array $interfacesIndexedByInterfaceID):array
+    private function getIpv6Addresses(array $interfacesIndexedByInterfaceID):array
     {
         $result = $this->snmp->walk("1.3.6.1.2.1.55.1.8");
         $resultsToBeInserted = [];
@@ -390,26 +391,6 @@ abstract class BaseDeviceMapper
     }
 
     /**
-     * Remove the prefix from an SNMP result
-     * @param string $result
-     * @return string
-     */
-    protected function cleanSnmpResult(string $result):string
-    {
-        $boom = explode(":",$result,2);
-        return trim($boom[1]);
-    }
-
-    /**
-     * @param string $mac
-     * @return bool
-     */
-    protected function validateMac(string $mac):bool
-    {
-        return preg_match('/^([A-F0-9]{2}:){5}[A-F0-9]{2}$/', $mac) == 1;
-    }
-
-    /**
      * @param string $mask
      * @return int
      */
@@ -418,5 +399,35 @@ abstract class BaseDeviceMapper
         $long = ip2long($mask);
         $base = ip2long('255.255.255.255');
         return 32-log(($long ^ $base)+1,2);
+    }
+
+    /**
+     * @param array $interfacesIndexedByInterfaceID
+     * @return array of DeviceInterface
+     */
+    private function buildDeviceInterfaceObjectsFromResults(array $interfacesIndexedByInterfaceID):array
+    {
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = [];
+        foreach ($interfacesIndexedByInterfaceID as $interfaceIndex => $interface)
+        {
+            $deviceInterface = new DeviceInterface();
+            $deviceInterface->setUp($interface['status']);
+            $deviceInterface->setDescription($interface['name']);
+            $deviceInterface->setMetadata([
+                'ip_addresses' => $interface['ip_addresses'],
+            ]);
+            if ($interface['mac_address'] !== null)
+            {
+                if ($this->validateMac($interface['mac_address']))
+                {
+                    $deviceInterface->setMacAddress($interface['mac_address']);
+                }
+            }
+
+            $deviceInterface->setConnectedMacs(array_unique($interface['connected_l2']),DeviceInterface::LAYER2);
+            $deviceInterface->setConnectedMacs(array_unique($interface['connected_l3']),DeviceInterface::LAYER3);
+            $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$interfaceIndex] = $deviceInterface;
+        }
+        return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
 }
