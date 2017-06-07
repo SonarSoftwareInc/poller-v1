@@ -31,11 +31,10 @@ class PerformIcmpPolling
                 $logger->log("Starting ICMP polling cycle.",Logger::INFO);
             }
 
-            $poller = new IcmpPoller();
-
             $startTime = time();
 
             try {
+                $poller = new IcmpPoller();
                 $results = $poller->poll($this->args);
             }
             catch (Exception $e)

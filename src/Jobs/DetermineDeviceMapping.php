@@ -61,10 +61,10 @@ class DetermineDeviceMapping
 
             TemporaryVariables::set("Device Mapping Running", $now->toDateTimeString());
 
-            $poller = new DeviceMappingPoller();
             $startTime = time();
 
             try {
+                $poller = new DeviceMappingPoller();
                 $results = $poller->poll($this->args);
             }
             catch (Exception $e)

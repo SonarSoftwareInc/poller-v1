@@ -31,11 +31,10 @@ class PerformSnmpGets
                 $logger->log("Starting SNMP polling cycle.",Logger::INFO);
             }
 
-            $poller = new SnmpPoller();
-
             $startTime = time();
 
             try {
+                $poller = new SnmpPoller();
                 $results = $poller->poll($this->args);
             }
             catch (Exception $e)
