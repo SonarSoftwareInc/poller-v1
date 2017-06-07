@@ -5,18 +5,23 @@ namespace SonarSoftware\Poller\DeviceMappers;
 use Exception;
 use Leth\IPAddress\IP\Address;
 use Leth\IPAddress\IP\NetworkAddress;
+use Monolog\Logger;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Models\DeviceInterface;
+use SonarSoftware\Poller\Services\SonarLogger;
 
 abstract class BaseDeviceMapper
 {
     protected $snmp;
     protected $device;
+    protected $log;
+
     public function __construct(Device $device)
     {
         $this->snmp = $this->snmp = $device->getSnmpObject();
         $this->device = $device;
+        $this->log = new SonarLogger();
     }
 
     /**
@@ -78,14 +83,20 @@ abstract class BaseDeviceMapper
         }
         catch (Exception $e)
         {
-            //
+            if (getenv("DEBUG") == "true")
+            {
+                $this->log->log("Failed to get MAC addresses for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+            }
         }
         try {
             $interfacesIndexedByInterfaceID = $this->getInterfaceStatus($interfacesIndexedByInterfaceID);
         }
         catch (Exception $e)
         {
-            //
+            if (getenv("DEBUG") == "true")
+            {
+                $this->log->log("Failed to get interface status for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+            }
         }
         if ($getArp === true)
         {
@@ -94,7 +105,11 @@ abstract class BaseDeviceMapper
             }
             catch (Exception $e)
             {
-                //
+                echo $e->getMessage() . "\n";
+                if (getenv("DEBUG") == "true")
+                {
+                    $this->log->log("Failed to get ARP for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+                }
             }
         }
 
@@ -105,7 +120,10 @@ abstract class BaseDeviceMapper
             }
             catch (Exception $e)
             {
-                //
+                if (getenv("DEBUG") == "true")
+                {
+                    $this->log->log("Failed to get IPv4 addresses for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+                }
             }
         }
 
@@ -116,7 +134,10 @@ abstract class BaseDeviceMapper
             }
             catch (Exception $e)
             {
-                //
+                if (getenv("DEBUG") == "true")
+                {
+                    $this->log->log("Failed to get IPv6 addresses for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+                }
             }
         }
 
@@ -127,7 +148,10 @@ abstract class BaseDeviceMapper
             }
             catch (Exception $e)
             {
-                //
+                if (getenv("DEBUG") == "true")
+                {
+                    $this->log->log("Failed to get bridging table for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+                }
             }
         }
 
@@ -189,10 +213,16 @@ abstract class BaseDeviceMapper
             $boom = explode(".", $key);
             if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
             {
-                $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                if ($this->validateMac($mac))
+                try {
+                    $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
+                    if ($this->validateMac($mac))
+                    {
+                        $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['mac_address'] = $mac;
+                    }
+                }
+                catch (Exception $e)
                 {
-                    $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['mac_address'] = $mac;
+                    continue;
                 }
             }
         }
@@ -213,10 +243,16 @@ abstract class BaseDeviceMapper
             $boom = explode(".", $key);
             if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-5]]))
             {
-                $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                if ($this->validateMac($mac))
+                try {
+                    $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
+                    if ($this->validateMac($mac))
+                    {
+                        array_push($interfacesIndexedByInterfaceID[$boom[count($boom)-5]]['connected_l3'],$mac);
+                    }
+                }
+                catch (Exception $e)
                 {
-                    array_push($interfacesIndexedByInterfaceID[$boom[count($boom)-5]]['connected_l3'],$mac);
+                    continue;
                 }
             }
         }

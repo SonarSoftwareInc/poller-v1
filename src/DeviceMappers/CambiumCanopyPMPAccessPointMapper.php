@@ -56,10 +56,16 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
             foreach ($result as $key => $datum)
             {
                 $boom = explode(".",$key);
-                $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                if ($this->validateMac($mac) && in_array($boom[count($boom)-1],$registeredStates))
+                try {
+                    $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
+                    if ($this->validateMac($mac) && in_array($boom[count($boom)-1],$registeredStates))
+                    {
+                        array_push($existingMacs,$mac);
+                    }
+                }
+                catch (Exception $e)
                 {
-                    array_push($existingMacs,$mac);
+                    continue;
                 }
             }
         }

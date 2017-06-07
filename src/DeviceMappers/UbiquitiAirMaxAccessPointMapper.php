@@ -41,10 +41,16 @@ class UbiquitiAirMaxAccessPointMapper extends BaseDeviceMapper implements Device
             $result = $this->snmp->walk("1.3.6.1.4.1.41112.1.4.7.1.1");
             foreach ($result as $key => $datum)
             {
-                $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                if ($this->validateMac($mac))
+                try {
+                    $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
+                    if ($this->validateMac($mac))
+                    {
+                        array_push($existingMacs,$mac);
+                    }
+                }
+                catch (Exception $e)
                 {
-                    array_push($existingMacs,$mac);
+                    continue;
                 }
             }
         }
