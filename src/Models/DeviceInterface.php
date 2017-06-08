@@ -176,7 +176,7 @@ class DeviceInterface
      */
     public function getConnectedMacs(string $layer):array
     {
-        if (!in_array($layer,[$this::LAYER2, $this::LAYER3]))
+        if (!in_array($layer,[$this::LAYER1, $this::LAYER2, $this::LAYER3]))
         {
             throw new InvalidArgumentException("Layer must be one of the layer constants.");
         }
