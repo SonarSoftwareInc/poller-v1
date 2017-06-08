@@ -82,28 +82,7 @@ class DeviceMappingPoller
                         $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
 
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
-                        switch ($hostWithDeviceType['type_query_result'])
-                        {
-                            case "1.3.6.1.4.1.161.19.250.256":
-                                $mapper = new CambiumCanopyPMPAccessPointMapper($device);
-                                break;
-                            case "1.3.6.1.4.1.17713.21":
-                                $mapper = new CambiumEpmpAccessPointMapper($device);
-                                break;
-                            case "1.3.6.1.4.1.41112.1.4":
-                                $mapper = new UbiquitiAirMaxAccessPointMapper($device);
-                                break;
-                            case "1.3.6.1.4.1.17713.7":
-                                $mapper = new CambiumPTP650Backhaul($device);
-                                break;
-                            case "1.3.6.1.4.1.17713.6":
-                                $mapper = new CambiumPTP600Backhaul($device);
-                                break;
-                            default:
-                                $mapper = new GenericDeviceMapper($device);
-                                break;
-                        }
-
+                        $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
                         $device = $mapper->mapDevice();
                         array_push($devices, $device->toArray());
                     }
@@ -156,6 +135,38 @@ class DeviceMappingPoller
         }
 
         return $results;
+    }
+
+    /**
+     * Determine the mapper to use based on the system OID query
+     * @param array $hostWithDeviceType
+     * @param Device $device
+     * @return BaseDeviceMapper (or derivative thereof)
+     */
+    private function getDeviceMapper(array $hostWithDeviceType, Device $device)
+    {
+        switch ($hostWithDeviceType['type_query_result'])
+        {
+            case "1.3.6.1.4.1.161.19.250.256":
+                $mapper = new CambiumCanopyPMPAccessPointMapper($device);
+                break;
+            case "1.3.6.1.4.1.17713.21":
+                $mapper = new CambiumEpmpAccessPointMapper($device);
+                break;
+            case "1.3.6.1.4.1.41112.1.4":
+                $mapper = new UbiquitiAirMaxAccessPointMapper($device);
+                break;
+            case "1.3.6.1.4.1.17713.7":
+                $mapper = new CambiumPTP650Backhaul($device);
+                break;
+            case "1.3.6.1.4.1.17713.6":
+                $mapper = new CambiumPTP600Backhaul($device);
+                break;
+            default:
+                $mapper = new GenericDeviceMapper($device);
+                break;
+        }
+        return $mapper;
     }
 
     /**
