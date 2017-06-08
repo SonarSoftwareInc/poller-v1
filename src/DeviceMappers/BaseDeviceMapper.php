@@ -73,9 +73,16 @@ abstract class BaseDeviceMapper
      * @param bool $getBridgingTable - Read the bridging table
      * @param bool $getIpv4 - Get IPv4 addresses
      * @param bool $getIpv6 - Get IPv6 addresses
+     * @param bool $getSpeeds - Get interface speeds
      * @return array
      */
-    protected function getInterfacesWithStandardMibData($getArp = true, $getBridgingTable = true, $getIpv4 = true, $getIpv6 = true):array
+    protected function getInterfacesWithStandardMibData(
+        $getArp = true,
+        $getBridgingTable = true,
+        $getIpv4 = true,
+        $getIpv6 = true,
+        $getSpeeds = true
+    ):array
     {
         $interfacesIndexedByInterfaceID = $this->buildInitialInterfaceArray();
         try {
@@ -154,6 +161,20 @@ abstract class BaseDeviceMapper
             }
         }
 
+        if ($getSpeeds === true)
+        {
+            try {
+                $interfacesIndexedByInterfaceID = $this->getInterfaceSpeeds($interfacesIndexedByInterfaceID);
+            }
+            catch (Exception $e)
+            {
+                if (getenv("DEBUG") == "true")
+                {
+                    $this->log->log("Failed to get speeds for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+                }
+            }
+        }
+
         return $this->buildDeviceInterfaceObjectsFromResults($interfacesIndexedByInterfaceID);
     }
 
@@ -194,9 +215,34 @@ abstract class BaseDeviceMapper
                 'connected_l3' => [],
                 'ip_addresses' => [],
                 'mac_address' => null,
+                'speed_mbps' => null,
             ];
         }
         return $interfaces;
+    }
+
+    /**
+     * @param array $interfacesIndexedByInterfaceID
+     * @return array
+     */
+    private function getInterfaceSpeeds(array $interfacesIndexedByInterfaceID):array
+    {
+        $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.5");
+        foreach ($result as $key => $datum)
+        {
+            $key = ltrim($key,".");
+            $boom = explode(".", $key);
+            if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
+            {
+                $speed = $this->cleanSnmpResult($datum);
+                if (is_numeric($speed) && $speed > 0)
+                {
+                    $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['speed_mbps'] = ceil($speed/1000**2);
+                }
+            }
+        }
+
+        return $interfacesIndexedByInterfaceID;
     }
 
     /**
@@ -288,18 +334,24 @@ abstract class BaseDeviceMapper
             {
                 continue;
             }
-            $macAddress = Formatter::formatMac($datum);
-            if ($this->validateMac($macAddress))
-            {
-                $key = ltrim($key,".");
-                $boom = explode(".",$key,12);
-                if (isset($mappings[$boom[11]]))
+            try {
+                $macAddress = Formatter::formatMac($datum);
+                if ($this->validateMac($macAddress))
                 {
-                    if (isset($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]))
+                    $key = ltrim($key,".");
+                    $boom = explode(".",$key,12);
+                    if (isset($mappings[$boom[11]]))
                     {
-                        array_push($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]['connected_l2'],$macAddress);
+                        if (isset($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]))
+                        {
+                            array_push($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]['connected_l2'],$macAddress);
+                        }
                     }
                 }
+            }
+            catch (Exception $e)
+            {
+                continue;
             }
         }
 
