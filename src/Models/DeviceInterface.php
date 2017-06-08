@@ -13,6 +13,7 @@ class DeviceInterface
     private $connectedMacsLayer2 = [];
     private $connectedMacsLayer3 = [];
     private $description;
+    private $speedMbps = null;
 
     const LAYER2 = "l2";
     const LAYER3 = "l3";
@@ -30,11 +31,13 @@ class DeviceInterface
             'mac_address' => $this->macAddress,
             'connected_l2' => $this->connectedMacsLayer2,
             'connected_l3' => $this->connectedMacsLayer3,
+            'speed_mbps' => $this->speedMbps,
         ];
     }
 
     /**
      * Set the name/description of the interface
+     * @param string $description
      */
     public function setDescription(string $description)
     {
@@ -48,6 +51,28 @@ class DeviceInterface
     public function getDescription():string
     {
         return $this->description;
+    }
+
+    /**
+     * Set the speed of the interface
+     * @param int $speedMbps
+     */
+    public function setSpeedMbps(int $speedMbps)
+    {
+        if ($speedMbps < 0)
+        {
+            throw new InvalidArgumentException("Speed cannot be less than zero.");
+        }
+        $this->speedMbps = $speedMbps;
+    }
+
+    /**
+     * Get the speed of the interface
+     * @return mixed
+     */
+    public function getSpeedMbps():int
+    {
+        return (int)$this->speedMbps;
     }
 
     /**
