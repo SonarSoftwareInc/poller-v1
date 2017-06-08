@@ -10,11 +10,13 @@ class DeviceInterface
     private $up;
     private $metadata = [];
     private $macAddress;
+    private $connectedMacsLayer1 = [];
     private $connectedMacsLayer2 = [];
     private $connectedMacsLayer3 = [];
     private $description;
     private $speedMbps = null;
 
+    const LAYER1 = "l1";
     const LAYER2 = "l2";
     const LAYER3 = "l3";
 
@@ -29,6 +31,7 @@ class DeviceInterface
             'description' => $this->description,
             'metadata' => $this->metadata,
             'mac_address' => $this->macAddress,
+            'connected_l1' => $this->connectedMacsLayer1,
             'connected_l2' => $this->connectedMacsLayer2,
             'connected_l3' => $this->connectedMacsLayer3,
             'speed_mbps' => $this->speedMbps,
@@ -132,11 +135,11 @@ class DeviceInterface
 
     /**
      * @param array $connectedMacs
-     * @param string $layer - One of $this::LAYER2, $this::LAYER3
+     * @param string $layer - One of $this::LAYER1, $this::LAYER2, $this::LAYER3
      */
     public function setConnectedMacs(array $connectedMacs, string $layer)
     {
-        if (!in_array($layer,[$this::LAYER2, $this::LAYER3]))
+        if (!in_array($layer,[$this::LAYER1, $this::LAYER2, $this::LAYER3]))
         {
             throw new InvalidArgumentException("Layer must be one of the layer constants.");
         }
@@ -154,6 +157,9 @@ class DeviceInterface
 
         switch ($layer)
         {
+            case $this::LAYER1:
+                $this->connectedMacsLayer1 = $cleanedMacs;
+                break;
             case $this::LAYER2:
                 $this->connectedMacsLayer2 = $cleanedMacs;
                 break;

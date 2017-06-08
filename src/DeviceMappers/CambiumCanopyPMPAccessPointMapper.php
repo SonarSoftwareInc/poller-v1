@@ -36,7 +36,7 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
             }
         }
 
-        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER2);
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
         $registeredStates = [];
 
         try {
@@ -74,7 +74,7 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
             //
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER2);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }

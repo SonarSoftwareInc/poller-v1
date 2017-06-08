@@ -211,6 +211,7 @@ abstract class BaseDeviceMapper
             $interfaces[$boom[count($boom)-1]] = [
                 'name' => $this->cleanSnmpResult($datum),
                 'status' => null,
+                'connected_l1' => [],
                 'connected_l2' => [],
                 'connected_l3' => [],
                 'ip_addresses' => [],
@@ -511,6 +512,7 @@ abstract class BaseDeviceMapper
                 }
             }
 
+            $deviceInterface->setConnectedMacs(array_unique($interface['connected_l1']),DeviceInterface::LAYER1);
             $deviceInterface->setConnectedMacs(array_unique($interface['connected_l2']),DeviceInterface::LAYER2);
             $deviceInterface->setConnectedMacs(array_unique($interface['connected_l3']),DeviceInterface::LAYER3);
             if(is_int($interface['speed_mbps']))

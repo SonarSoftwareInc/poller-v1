@@ -37,7 +37,7 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
             }
         }
 
-        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER2);
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
 
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.17713.21.1.2.30.1.1");
@@ -61,7 +61,7 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
             //
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER2);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }

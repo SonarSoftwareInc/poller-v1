@@ -35,7 +35,7 @@ class UbiquitiAirMaxAccessPointMapper extends BaseDeviceMapper implements Device
             }
         }
 
-        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER2);
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
 
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.41112.1.4.7.1.1");
@@ -59,7 +59,7 @@ class UbiquitiAirMaxAccessPointMapper extends BaseDeviceMapper implements Device
             //
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER2);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
