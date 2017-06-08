@@ -6,10 +6,12 @@ use Dotenv\Dotenv;
 use Exception;
 use Monolog\Logger;
 use SNMP;
-use SonarSoftware\Poller\DeviceMappers\CambiumCanopyPMPAccessPointMapper;
-use SonarSoftware\Poller\DeviceMappers\CambiumEpmpAccessPointMapper;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumCanopyPMPAccessPointMapper;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumEpmpAccessPointMapper;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP600Backhaul;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP650Backhaul;
 use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
-use SonarSoftware\Poller\DeviceMappers\UbiquitiAirMaxAccessPointMapper;
+use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirMaxAccessPointMapper;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Services\SonarLogger;
@@ -90,6 +92,12 @@ class DeviceMappingPoller
                                 break;
                             case "1.3.6.1.4.1.41112.1.4":
                                 $mapper = new UbiquitiAirMaxAccessPointMapper($device);
+                                break;
+                            case "1.3.6.1.4.1.17713.7":
+                                $mapper = new CambiumPTP650Backhaul($device);
+                                break;
+                            case "1.3.6.1.4.1.17713.6":
+                                $mapper = new CambiumPTP600Backhaul($device);
                                 break;
                             default:
                                 $mapper = new GenericDeviceMapper($device);

@@ -1,8 +1,10 @@
 <?php
 
-namespace SonarSoftware\Poller\DeviceMappers;
+namespace SonarSoftware\Poller\DeviceMappers\Ubiquiti;
 
 use Exception;
+use SonarSoftware\Poller\DeviceMappers\BaseDeviceMapper;
+use SonarSoftware\Poller\DeviceMappers\DeviceMapperInterface;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Models\DeviceInterface;

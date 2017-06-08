@@ -1,36 +1,39 @@
 <?php
 
-namespace SonarSoftware\Poller\DeviceMappers;
+namespace SonarSoftware\Poller\DeviceMappers\Cambium;
 
 use Exception;
+use SonarSoftware\Poller\DeviceMappers\BaseDeviceMapper;
+use SonarSoftware\Poller\DeviceMappers\DeviceMapperInterface;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Models\DeviceInterface;
 
-class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMapperInterface
+class CambiumPTP600Backhaul extends BaseDeviceMapper implements DeviceMapperInterface
 {
-
+    /**
+     * @return Device
+     */
     public function mapDevice(): Device
     {
         $this->setSystemMetadataOnDevice();
         $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getInterfacesWithStandardMibData(true, false);
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getConnectedRadios($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getRemoteBackhaulMac($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
         $this->device->setInterfaces($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
 
         return $this->device;
     }
 
     /**
-     * This gets attached to the WLAN interface, which is always the second interface.
      * @param array $arrayOfDeviceInterfacesIndexedByInterfaceIndex
-     * @return array|mixed
+     * @return array
      */
-    private function getConnectedRadios(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
+    private function getRemoteBackhaulMac(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
     {
-        $keyToUse = 0;
+        $keyToUse = 1;
         foreach ($arrayOfDeviceInterfacesIndexedByInterfaceIndex as $key => $deviceInterface)
         {
-            if (strpos($deviceInterface->getDescription(),"WLAN") !== false)
+            if (strpos($deviceInterface->getDescription(),"wireless") !== false)
             {
                 $keyToUse = $key;
                 break;
@@ -40,7 +43,7 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
         $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
 
         try {
-            $result = $this->snmp->walk("1.3.6.1.4.1.17713.21.1.2.30.1.1");
+            $result = $this->snmp->walk("1.3.6.1.4.1.17713.6.5.4.0");
             foreach ($result as $key => $datum)
             {
                 try {
