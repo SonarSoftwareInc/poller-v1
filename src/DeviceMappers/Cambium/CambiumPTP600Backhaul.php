@@ -17,7 +17,7 @@ class CambiumPTP600Backhaul extends BaseDeviceMapper implements DeviceMapperInte
     public function mapDevice(): Device
     {
         $this->setSystemMetadataOnDevice();
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getInterfacesWithStandardMibData(true, false);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getInterfacesWithStandardMibData(false, false, false, false, true);
         $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getRemoteBackhaulMac($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
         $this->device->setInterfaces($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
 
