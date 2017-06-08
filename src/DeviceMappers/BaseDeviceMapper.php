@@ -237,7 +237,7 @@ abstract class BaseDeviceMapper
                 $speed = $this->cleanSnmpResult($datum);
                 if (is_numeric($speed) && $speed > 0)
                 {
-                    $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['speed_mbps'] = ceil($speed/1000**2);
+                    $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['speed_mbps'] = (int)ceil($speed/1000**2);
                 }
             }
         }
@@ -513,7 +513,10 @@ abstract class BaseDeviceMapper
 
             $deviceInterface->setConnectedMacs(array_unique($interface['connected_l2']),DeviceInterface::LAYER2);
             $deviceInterface->setConnectedMacs(array_unique($interface['connected_l3']),DeviceInterface::LAYER3);
-            $deviceInterface->setSpeedMbps($interfaceIndex['speed_mbps']);
+            if(is_int($interface['speed_mbps']))
+            {
+                $deviceInterface->setSpeedMbps((int)$interface['speed_mbps']);
+            }
             $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$interfaceIndex] = $deviceInterface;
         }
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
