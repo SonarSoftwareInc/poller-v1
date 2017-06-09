@@ -43,6 +43,9 @@ if (version_compare($currentVersion, $latestVersion) === -1)
 
     TemporaryVariables::set("SNMP Polling Running",null);
     TemporaryVariables::set("ICMP Polling Running",null);
+
+    exec("/bin/chmod +x /opt/poller/vendor/bin/psysh");
+    exec("/bin/chmod +x /opt/poller/vendor/psy/psysh/bin/psysh");
 }
 
 echo "You are on the latest version.\n";

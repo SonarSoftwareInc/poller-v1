@@ -183,7 +183,7 @@ class DeviceInterface
         switch ($layer)
         {
             case $this::LAYER1:
-                return $this->connectedMacsLayer2;
+                return $this->connectedMacsLayer1;
                 break;
             case $this::LAYER2:
                 return $this->connectedMacsLayer2;
