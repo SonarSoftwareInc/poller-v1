@@ -16,6 +16,7 @@ use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP670Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP700Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP800Backhaul;
 use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
+use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirFiber24;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirMaxAccessPointMapper;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
@@ -181,6 +182,9 @@ class DeviceMappingPoller
                 break;
             case "1.3.6.1.4.1.17713.8":
                 $mapper = new CambiumPTP800Backhaul($device);
+                break;
+            case "1.3.6.1.4.1.10002.1":
+                $mapper = new UbiquitiAirFiber24($device);
                 break;
             default:
                 $mapper = new GenericDeviceMapper($device);
