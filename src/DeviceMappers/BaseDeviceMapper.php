@@ -84,7 +84,15 @@ abstract class BaseDeviceMapper
         $getSpeeds = true
     ):array
     {
-        $interfacesIndexedByInterfaceID = $this->buildInitialInterfaceArray();
+        try {
+            $interfacesIndexedByInterfaceID = $this->buildInitialInterfaceArray();
+        }
+        catch (Exception $e)
+        {
+            //If we can't get any interfaces, we return an empty array. This is so the device is at least represented on the map, even though it'll have no data.
+            return [];
+        }
+
         try {
             $interfacesIndexedByInterfaceID = $this->getInterfaceMacAddresses($interfacesIndexedByInterfaceID);
         }
