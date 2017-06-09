@@ -9,7 +9,7 @@ use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Models\DeviceInterface;
 
-class UbiquitiAirFiber24 extends BaseDeviceMapper implements DeviceMapperInterface
+class UbiquitiAirFiber extends BaseDeviceMapper implements DeviceMapperInterface
 {
     /**
      * @return Device
