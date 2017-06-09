@@ -8,8 +8,13 @@ use Monolog\Logger;
 use SNMP;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumCanopyPMPAccessPointMapper;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumEpmpAccessPointMapper;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP250Backhaul;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP500Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP600Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP650Backhaul;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP670Backhaul;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP700Backhaul;
+use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP800Backhaul;
 use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirMaxAccessPointMapper;
 use SonarSoftware\Poller\Formatters\Formatter;
@@ -162,10 +167,26 @@ class DeviceMappingPoller
             case "1.3.6.1.4.1.17713.6":
                 $mapper = new CambiumPTP600Backhaul($device);
                 break;
+            case "1.3.6.1.4.1.17713.250":
+                $mapper = new CambiumPTP250Backhaul($device);
+                break;
+            case "1.3.6.1.4.1.17713.5":
+                $mapper = new CambiumPTP500Backhaul($device);
+                break;
+            case "1.3.6.1.4.1.17713.11":
+                $mapper = new CambiumPTP670Backhaul($device);
+                break;
+            case "1.3.6.1.4.1.17713.9":
+                $mapper = new CambiumPTP700Backhaul($device);
+                break;
+            case "1.3.6.1.4.1.17713.8":
+                $mapper = new CambiumPTP800Backhaul($device);
+                break;
             default:
                 $mapper = new GenericDeviceMapper($device);
                 break;
         }
+
         return $mapper;
     }
 
