@@ -17,7 +17,7 @@ class CambiumPTP650Backhaul extends BaseDeviceMapper implements DeviceMapperInte
     public function mapDevice(): Device
     {
         $this->setSystemMetadataOnDevice();
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getInterfacesWithStandardMibData(false, false, false, false, true);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getInterfacesWithStandardMibData(false, false, true, false, true);
         $arrayOfDeviceInterfacesIndexedByInterfaceIndex = $this->getRemoteBackhaulMac($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
         $this->device->setInterfaces($arrayOfDeviceInterfacesIndexedByInterfaceIndex);
 
@@ -43,20 +43,11 @@ class CambiumPTP650Backhaul extends BaseDeviceMapper implements DeviceMapperInte
         $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
 
         try {
-            $result = $this->snmp->walk("1.3.6.1.4.1.17713.7.12.17.0");
-            foreach ($result as $key => $datum)
+            $result = $this->snmp->get("1.3.6.1.4.1.17713.7.12.17.0");
+            $mac = Formatter::formatMac($this->cleanSnmpResult($result));
+            if ($this->validateMac($mac))
             {
-                try {
-                    $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                    if ($this->validateMac($mac))
-                    {
-                        array_push($existingMacs,$mac);
-                    }
-                }
-                catch (Exception $e)
-                {
-                    continue;
-                }
+                array_push($existingMacs,$mac);
             }
         }
         catch (Exception $e)
