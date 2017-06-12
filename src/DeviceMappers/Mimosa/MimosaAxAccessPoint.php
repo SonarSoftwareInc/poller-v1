@@ -65,7 +65,7 @@ class MimosaAxAccessPoint extends BaseDeviceMapper implements DeviceMapperInterf
             //
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs(array_unique($existingMacs),DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
