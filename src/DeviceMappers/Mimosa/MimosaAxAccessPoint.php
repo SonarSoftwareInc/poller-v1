@@ -28,17 +28,7 @@ class MimosaAxAccessPoint extends BaseDeviceMapper implements DeviceMapperInterf
      */
     private function getConnectedSms(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
     {
-        $keyToUse = 0;
-        foreach ($arrayOfDeviceInterfacesIndexedByInterfaceIndex as $key => $deviceInterface)
-        {
-            if (strpos($deviceInterface->getDescription(),"MultiPoint") !== false) //TODO: Need to find the real way to identify the wireless interface here
-            {
-                $keyToUse = $key;
-                break;
-            }
-        }
-
-        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[0]->getConnectedMacs(DeviceInterface::LAYER1);
         $registeredStates = [];
 
         try {
