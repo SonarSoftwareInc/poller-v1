@@ -56,7 +56,7 @@ class MimosaBxBackhaul extends BaseDeviceMapper implements DeviceMapperInterface
             //
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[0]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
