@@ -16,9 +16,10 @@ use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP670Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP700Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP800Backhaul;
 use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
+use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaAxAccessPoint;
+use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaBxBackhaul;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirFiber;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirMaxAccessPointMapper;
-use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Services\SonarLogger;
 
@@ -185,6 +186,13 @@ class DeviceMappingPoller
                 break;
             case "1.3.6.1.4.1.10002.1":
                 $mapper = new UbiquitiAirFiber($device);
+                break;
+            case "1.3.6.1.4.1..43356.1.1.1": //B5, B5c, B11, B5-Lite (FW 1.4.5 and older)
+            case "1.3.6.1.4.1..43356.1.1.2": //B5-Lite
+                $mapper = new MimosaBxBackhaul($device);
+                break;
+            case "1.3.6.1.4.1..43356.1.1.3": //A5-14, A5-18, A5c (FW 2.3+)
+                $mapper = new MimosaAxAccessPoint($device);
                 break;
             default:
                 $mapper = new GenericDeviceMapper($device);
