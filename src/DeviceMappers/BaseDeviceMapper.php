@@ -74,6 +74,7 @@ abstract class BaseDeviceMapper
      * @param bool $getIpv4 - Get IPv4 addresses
      * @param bool $getIpv6 - Get IPv6 addresses
      * @param bool $getSpeeds - Get interface speeds
+     * @param bool $getInterfaceTypes - Get the interface types
      * @return array
      */
     protected function getInterfacesWithStandardMibData(
@@ -81,7 +82,8 @@ abstract class BaseDeviceMapper
         $getBridgingTable = true,
         $getIpv4 = true,
         $getIpv6 = true,
-        $getSpeeds = true
+        $getSpeeds = true,
+        $getInterfaceTypes = true
     ):array
     {
         try {
@@ -183,6 +185,20 @@ abstract class BaseDeviceMapper
             }
         }
 
+        if ($getInterfaceTypes === true)
+        {
+            try {
+                $interfacesIndexedByInterfaceID = $this->getInterfaceTypes($interfacesIndexedByInterfaceID);
+            }
+            catch (Exception $e)
+            {
+                if (getenv("DEBUG") == "true")
+                {
+                    $this->log->log("Failed to get interface types for {$this->device->getSnmpObject()->info['hostname']} - {$e->getMessage()}",Logger::ERROR);
+                }
+            }
+        }
+
         return $this->buildDeviceInterfaceObjectsFromResults($interfacesIndexedByInterfaceID);
     }
 
@@ -225,6 +241,7 @@ abstract class BaseDeviceMapper
                 'ip_addresses' => [],
                 'mac_address' => null,
                 'speed_mbps' => null,
+                'type' => null,
             ];
         }
         return $interfaces;
@@ -248,6 +265,29 @@ abstract class BaseDeviceMapper
                 {
                     $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['speed_mbps'] = (int)ceil($speed/1000**2);
                 }
+            }
+        }
+
+        return $interfacesIndexedByInterfaceID;
+    }
+
+    /**
+     * @param array $interfacesIndexedByInterfaceID
+     * @return array
+     */
+    private function getInterfaceTypes(array $interfacesIndexedByInterfaceID):array
+    {
+        //We have to change this here to get useful descriptions
+        $this->snmp->enum_print = 0;
+        $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.3");
+        $this->snmp->enum_print = 1;
+        foreach ($result as $key => $datum)
+        {
+            $key = ltrim($key,".");
+            $boom = explode(".", $key);
+            if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
+            {
+                $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['type'] = $this->cleanSnmpResult($datum);
             }
         }
 
@@ -526,6 +566,10 @@ abstract class BaseDeviceMapper
             if(is_int($interface['speed_mbps']))
             {
                 $deviceInterface->setSpeedMbps((int)$interface['speed_mbps']);
+            }
+            if ($interface['type'] !== null)
+            {
+                $deviceInterface->setType($interface['type']);
             }
             $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$interfaceIndex] = $deviceInterface;
         }

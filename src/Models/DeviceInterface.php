@@ -15,6 +15,7 @@ class DeviceInterface
     private $connectedMacsLayer3 = [];
     private $description;
     private $speedMbps = null;
+    private $type = null;
 
     const LAYER1 = "l1";
     const LAYER2 = "l2";
@@ -35,7 +36,25 @@ class DeviceInterface
             'connected_l2' => $this->connectedMacsLayer2,
             'connected_l3' => $this->connectedMacsLayer3,
             'speed_mbps' => $this->speedMbps,
+            'type' => $this->type,
         ];
+    }
+
+    /**
+     * Set the interface type
+     * @param string $type
+     */
+    public function setType(string $type)
+    {
+        $this->type = $type;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType():string
+    {
+        return $this->type;
     }
 
     /**
