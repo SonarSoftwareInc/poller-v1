@@ -36,8 +36,7 @@ class MimosaBxBackhaul extends BaseDeviceMapper implements DeviceMapperInterface
      */
     private function getRemoteBackhaulMac(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
     {
-        $keyToUse = 5;
-        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[0]->getConnectedMacs(DeviceInterface::LAYER1); //The 0 here may need to be changed in future
 
         try {
             //This is a pretty lame workaround, but it's the only way we can try to get the far end until firmware upgrades are provided.
