@@ -28,7 +28,16 @@ class MimosaAxAccessPoint extends BaseDeviceMapper implements DeviceMapperInterf
      */
     private function getConnectedSms(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
     {
-        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[0]->getConnectedMacs(DeviceInterface::LAYER1);
+        $keyToUse = 5;
+        foreach ($arrayOfDeviceInterfacesIndexedByInterfaceIndex as $key => $deviceInterface)
+        {
+            if (strpos($deviceInterface->getDescription(),"wlan") !== false)
+            {
+                $keyToUse = $key;
+                break;
+            }
+        }
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
         $registeredStates = [];
 
         try {
@@ -55,7 +64,7 @@ class MimosaAxAccessPoint extends BaseDeviceMapper implements DeviceMapperInterf
             //
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[0]->setConnectedMacs(array_unique($existingMacs),DeviceInterface::LAYER1);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs(array_unique($existingMacs),DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }

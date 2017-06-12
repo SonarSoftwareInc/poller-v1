@@ -1,8 +1,4 @@
 <?php
-
-namespace SonarSoftware\Poller\DeviceMappers\Mimosa;
-
-use Exception;
 use SonarSoftware\Poller\DeviceMappers\BaseDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\DeviceMapperInterface;
 use SonarSoftware\Poller\Formatters\Formatter;
@@ -36,7 +32,16 @@ class MimosaBxBackhaul extends BaseDeviceMapper implements DeviceMapperInterface
      */
     private function getRemoteBackhaulMac(array $arrayOfDeviceInterfacesIndexedByInterfaceIndex):array
     {
-        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[0]->getConnectedMacs(DeviceInterface::LAYER1); //The 0 here may need to be changed in future
+        $keyToUse = 5;
+        foreach ($arrayOfDeviceInterfacesIndexedByInterfaceIndex as $key => $deviceInterface)
+        {
+            if (strpos($deviceInterface->getDescription(),"wlan") !== false)
+            {
+                $keyToUse = $key;
+                break;
+            }
+        }
+        $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
 
         try {
             //This is a pretty lame workaround, but it's the only way we can try to get the far end until firmware upgrades are provided.
@@ -56,7 +61,7 @@ class MimosaBxBackhaul extends BaseDeviceMapper implements DeviceMapperInterface
             //
         }
 
-        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[0]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
+        $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
     }
