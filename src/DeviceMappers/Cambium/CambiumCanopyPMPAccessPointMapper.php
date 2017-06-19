@@ -42,6 +42,7 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
         $registeredStates = [];
 
         try {
+            //This will return the 0A MAC, but the data may be in Sonar as 2A or 3A, so we add those too.
             $result = $this->snmp->walk("1.3.6.1.4.1.161.19.3.1.4.1.3");
             $states = $this->snmp->walk("1.3.6.1.4.1.161.19.3.1.4.1.19");
 
@@ -63,6 +64,9 @@ class CambiumCanopyPMPAccessPointMapper extends BaseDeviceMapper implements Devi
                     if ($this->validateMac($mac) && in_array($boom[count($boom)-1],$registeredStates))
                     {
                         array_push($existingMacs,$mac);
+                        //Manipulate this to be the 2A and 3A as well
+                        array_push($existingMacs,"2" . substr($mac,1));
+                        array_push($existingMacs,"3" . substr($mac,1));
                     }
                 }
                 catch (Exception $e)
