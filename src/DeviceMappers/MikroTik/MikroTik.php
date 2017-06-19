@@ -22,7 +22,6 @@ class MikroTik extends BaseDeviceMapper implements DeviceMapperInterface
     }
 
     /**
-     * These SMs are always connected to the 2nd interface, which is the multipoint wireless interface
      * @param array $arrayOfDeviceInterfacesIndexedByInterfaceIndex
      * @return array|mixed
      */
