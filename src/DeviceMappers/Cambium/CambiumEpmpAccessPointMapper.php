@@ -63,6 +63,20 @@ class CambiumEpmpAccessPointMapper extends BaseDeviceMapper implements DeviceMap
             //
         }
 
+        try {
+            //If this is a station (slave end of a backhaul, for example) we need to query this OID as well
+            $result = $this->snmp->get("1.3.6.1.4.1.17713.21.1.2.19.0");
+            $mac = Formatter::formatMac($this->cleanSnmpResult($result));
+            if ($this->validateMac($mac))
+            {
+                array_push($existingMacs,$mac);
+            }
+        }
+        catch (Exception $e)
+        {
+            //
+        }
+
         $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->setConnectedMacs($existingMacs,DeviceInterface::LAYER1);
 
         return $arrayOfDeviceInterfacesIndexedByInterfaceIndex;
