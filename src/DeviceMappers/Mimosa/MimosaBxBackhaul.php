@@ -1,4 +1,7 @@
 <?php
+
+namespace SonarSoftware\Poller\DeviceMappers\Mimosa;
+
 use SonarSoftware\Poller\DeviceMappers\BaseDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\DeviceMapperInterface;
 use SonarSoftware\Poller\Formatters\Formatter;

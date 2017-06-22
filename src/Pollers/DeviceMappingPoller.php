@@ -15,6 +15,7 @@ use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP650Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP670Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP700Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP800Backhaul;
+use SonarSoftware\Poller\DeviceMappers\Etherwan\EtherwanSwitch;
 use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaAxAccessPoint;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaBxBackhaul;
@@ -193,6 +194,9 @@ class DeviceMappingPoller
                 break;
             case "1.3.6.1.4.1..43356.1.1.3": //A5-14, A5-18, A5c (FW 2.3+)
                 $mapper = new MimosaAxAccessPoint($device);
+                break;
+            case "1.3.6.1.4.1.2736.1.1":
+                $mapper = new EtherwanSwitch($device);
                 break;
             default:
                 $mapper = new GenericDeviceMapper($device);
