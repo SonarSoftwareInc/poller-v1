@@ -17,6 +17,7 @@ use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP700Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP800Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Etherwan\EtherwanSwitch;
 use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
+use SonarSoftware\Poller\DeviceMappers\MikroTik\MikroTik;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaAxAccessPoint;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaBxBackhaul;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirFiber;
@@ -197,6 +198,9 @@ class DeviceMappingPoller
                 break;
             case "1.3.6.1.4.1.2736.1.1":
                 $mapper = new EtherwanSwitch($device);
+                break;
+            case "1.3.6.1.4.1.14988.1":
+                $mapper = new MikroTik($device);
                 break;
             default:
                 $mapper = new GenericDeviceMapper($device);
