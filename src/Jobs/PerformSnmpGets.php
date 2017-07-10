@@ -63,9 +63,12 @@ class PerformSnmpGets
             }
             catch (Exception $e)
             {
-                $logger->log("Caught an exception when attempting to deliver SNMP data to Sonar.", Logger::ERROR);
-                $logger->log($e->getMessage(), Logger::ERROR);
-                throw $e;
+                if (getenv('DEBUG') == "true")
+                {
+                    $logger->log("Caught an exception when attempting to deliver SNMP data to Sonar.", Logger::ERROR);
+                    $logger->log($e->getMessage(), Logger::ERROR);
+                }
+                return;
             }
 
             if (getenv('DEBUG') == "true")

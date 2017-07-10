@@ -93,8 +93,11 @@ class DetermineDeviceMapping
             }
             catch (Exception $e)
             {
-                $logger->log("Caught an exception when attempting to deliver device mapping data to Sonar.", Logger::ERROR);
-                $logger->log($e->getMessage(), Logger::ERROR);
+                if (getenv('DEBUG') == "true")
+                {
+                    $logger->log("Caught an exception when attempting to deliver device mapping data to Sonar.", Logger::ERROR);
+                    $logger->log($e->getMessage(), Logger::ERROR);
+                }
                 return;
             }
 
