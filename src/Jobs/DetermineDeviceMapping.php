@@ -29,9 +29,9 @@ class DetermineDeviceMapping
 
 
             $deviceMappingFrequency = getenv("DEVICE_MAPPING_FREQUENCY") ? (int)getenv("DEVICE_MAPPING_FREQUENCY") : 15;
-            if ($deviceMappingFrequency < 1)
+            if ($deviceMappingFrequency < 5)
             {
-                $deviceMappingFrequency = 15;
+                $deviceMappingFrequency = 5;
             }
             $now = new Carbon("UTC");
             $lastDeviceMappingRun = TemporaryVariables::get("Device Mapping Running");
