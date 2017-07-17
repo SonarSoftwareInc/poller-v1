@@ -14,12 +14,16 @@ class DeviceInterface
     private $connectedMacsLayer2 = [];
     private $connectedMacsLayer3 = [];
     private $description;
-    private $speedMbps = null;
+    private $speedMbpsIn = null;
+    private $speedMbpsOut = null;
     private $type = null;
 
     const LAYER1 = "l1";
     const LAYER2 = "l2";
     const LAYER3 = "l3";
+
+    const IN = "in";
+    const OUT = "out";
 
     /**
      * Convert this interface to an array
@@ -35,7 +39,9 @@ class DeviceInterface
             'connected_l1' => $this->connectedMacsLayer1,
             'connected_l2' => $this->connectedMacsLayer2,
             'connected_l3' => $this->connectedMacsLayer3,
-            'speed_mbps' => $this->speedMbps,
+            'speed_mbps' => $this->speedMbpsIn,
+            'speed_mbps_in' => $this->speedMbpsIn,
+            'speed_mbps_out' => $this->speedMbpsOut,
             'type' => $this->type,
         ];
     }
@@ -77,24 +83,50 @@ class DeviceInterface
 
     /**
      * Set the speed of the interface
-     * @param int $speedMbps
+     * @param int $speedMbpsIn
+     * @param int|null $speedMbpsOut
      */
-    public function setSpeedMbps(int $speedMbps)
+    public function setSpeedMbps(int $speedMbpsIn, int $speedMbpsOut = null)
     {
-        if ($speedMbps < 0)
+        if ($speedMbpsIn < 0)
         {
             throw new InvalidArgumentException("Speed cannot be less than zero.");
         }
-        $this->speedMbps = $speedMbps;
+        if ($speedMbpsOut && $speedMbpsOut < 0)
+        {
+            throw new InvalidArgumentException("Speed (out) cannot be less than zero.");
+        }
+        $this->speedMbpsIn = $speedMbpsIn;
+        if ($speedMbpsOut)
+        {
+            $this->speedMbpsOut = $speedMbpsOut;
+        }
     }
 
     /**
      * Get the speed of the interface
-     * @return mixed
+     * @param null $direction
+     * @return int|mixed
      */
-    public function getSpeedMbps():int
+    public function getSpeedMbps($direction = null):int
     {
-        return (int)$this->speedMbps;
+        if ($direction === null)
+        {
+            $direction = $this::IN;
+        }
+
+        switch ($direction)
+        {
+            case $this::IN:
+                return (int)$this->speedMbpsIn;
+                break;
+            case $this::OUT:
+                return (int)$this->speedMbpsOut;
+                break;
+            default:
+                throw new InvalidArgumentException("Direction must be one of 'in' or 'out'.");
+                break;
+        }
     }
 
     /**

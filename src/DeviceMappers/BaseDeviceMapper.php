@@ -241,6 +241,8 @@ abstract class BaseDeviceMapper
                 'ip_addresses' => [],
                 'mac_address' => null,
                 'speed_mbps' => null,
+                'speed_mbps_in' => null,
+                'speed_mbps_out' => null,
                 'type' => null,
             ];
         }
