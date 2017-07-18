@@ -39,7 +39,7 @@ class DeviceInterface
             'connected_l1' => $this->connectedMacsLayer1,
             'connected_l2' => $this->connectedMacsLayer2,
             'connected_l3' => $this->connectedMacsLayer3,
-            'speed_mbps' => $this->speedMbpsIn,
+            'speed_mbps' => $this->speedMbpsIn, //Deprecated
             'speed_mbps_in' => $this->speedMbpsIn,
             'speed_mbps_out' => $this->speedMbpsOut,
             'type' => $this->type,
@@ -100,6 +100,10 @@ class DeviceInterface
         if ($speedMbpsOut)
         {
             $this->speedMbpsOut = $speedMbpsOut;
+        }
+        else
+        {
+            $this->speedMbpsOut = $speedMbpsIn;
         }
     }
 
