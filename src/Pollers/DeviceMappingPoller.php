@@ -187,7 +187,7 @@ class DeviceMappingPoller
                 $mapper = new CambiumPTP800Backhaul($device);
                 break;
             case "1.3.6.1.4.1.10002.1":
-                $identifier = new UbiquitiIdentifier($device)
+                $identifier = new UbiquitiIdentifier($device);
                 $mapper = $identifier->getMapper(); //Ubiquiti doesn't separate their devices well by sysObjectID. This identifier will attempt to determine the right device to return.
                 break;
             case "1.3.6.1.4.1..43356.1.1.1": //B5, B5c, B11, B5-Lite (FW 1.4.5 and older)
