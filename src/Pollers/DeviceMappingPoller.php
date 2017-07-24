@@ -20,8 +20,8 @@ use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\MikroTik\MikroTik;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaAxAccessPoint;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaBxBackhaul;
-use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirFiber;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirMaxAccessPointMapper;
+use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiIdentifier;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Services\SonarLogger;
 
@@ -187,7 +187,7 @@ class DeviceMappingPoller
                 $mapper = new CambiumPTP800Backhaul($device);
                 break;
             case "1.3.6.1.4.1.10002.1":
-                $mapper = new UbiquitiAirFiber($device);
+                $mapper = new UbiquitiIdentifier($device); //Ubiquiti doesn't separate their devices well by sysObjectID. This identifier will attempt to determine the right device to return.
                 break;
             case "1.3.6.1.4.1..43356.1.1.1": //B5, B5c, B11, B5-Lite (FW 1.4.5 and older)
             case "1.3.6.1.4.1..43356.1.1.2": //B5-Lite
