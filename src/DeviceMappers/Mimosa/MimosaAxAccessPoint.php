@@ -38,17 +38,15 @@ class MimosaAxAccessPoint extends BaseDeviceMapper implements DeviceMapperInterf
             }
         }
         $existingMacs = $arrayOfDeviceInterfacesIndexedByInterfaceIndex[$keyToUse]->getConnectedMacs(DeviceInterface::LAYER1);
-        $registeredStates = [];
 
         try {
             $result = $this->snmp->walk("1.3.6.1.4.1.43356.2.1.2.9.6.1.1.2");
 
             foreach ($result as $key => $datum)
             {
-                $boom = explode(".",$key);
                 try {
                     $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                    if ($this->validateMac($mac) && in_array($boom[count($boom)-1],$registeredStates))
+                    if ($this->validateMac($mac))
                     {
                         array_push($existingMacs,$mac);
                     }
