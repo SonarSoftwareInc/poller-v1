@@ -190,11 +190,11 @@ class DeviceMappingPoller
                 $identifier = new UbiquitiIdentifier($device);
                 $mapper = $identifier->getMapper(); //Ubiquiti doesn't separate their devices well by sysObjectID. This identifier will attempt to determine the right device to return.
                 break;
-            case "1.3.6.1.4.1..43356.1.1.1": //B5, B5c, B11, B5-Lite (FW 1.4.5 and older)
-            case "1.3.6.1.4.1..43356.1.1.2": //B5-Lite
+            case "1.3.6.1.4.1.43356.1.1.1": //B5, B5c, B11, B5-Lite (FW 1.4.5 and older)
+            case "1.3.6.1.4.1.43356.1.1.2": //B5-Lite
                 $mapper = new MimosaBxBackhaul($device);
                 break;
-            case "1.3.6.1.4.1..43356.1.1.3": //A5-14, A5-18, A5c (FW 2.3+)
+            case "1.3.6.1.4.1.43356.1.1.3": //A5-14, A5-18, A5c (FW 2.3+)
                 $mapper = new MimosaAxAccessPoint($device);
                 break;
             case "1.3.6.1.4.1.2736.1.1":
