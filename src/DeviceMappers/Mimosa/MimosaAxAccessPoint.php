@@ -3,9 +3,9 @@
 namespace SonarSoftware\Poller\DeviceMappers\Mimosa;
 
 use Exception;
-use Psy\Formatter\Formatter;
 use SonarSoftware\Poller\DeviceMappers\BaseDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\DeviceMapperInterface;
+use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Models\Device;
 use SonarSoftware\Poller\Models\DeviceInterface;
 
