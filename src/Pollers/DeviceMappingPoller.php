@@ -160,6 +160,7 @@ class DeviceMappingPoller
                 $mapper = new CambiumCanopyPMPAccessPointMapper($device);
                 break;
             case "1.3.6.1.4.1.17713.21":
+            case "1.3.6.1.4.1.17713.21.1.1.2":
                 $mapper = new CambiumEpmpAccessPointMapper($device);
                 break;
             case "1.3.6.1.4.1.41112.1.4":
