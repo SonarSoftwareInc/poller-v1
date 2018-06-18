@@ -233,6 +233,15 @@ class SnmpPoller
                 {
                     $resultToWrite[$host['ip']]['status'] = $this->updateStatusAfterException($e);
                 }
+
+                try {
+                    $result = $snmp->walk("1.3.6.1.2.1.31.1.1.1");
+                    $resultToWrite[$host['ip']]['results']['interfaces_64bit'] = json_decode(json_encode($result),true);
+                }
+                catch (SNMPException $e)
+                {
+                    //Ignore, the device might not support 64bit counters
+                }
             }
         }
 
