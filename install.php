@@ -61,8 +61,7 @@ try {
 }
 catch (RuntimeException $e)
 {
-    $climate->shout("FAILED!");
-    return;
+    $climate->shout("Failed, but this may be due to a bug in monit (https://bugs.launchpad.net/ubuntu/+source/monit/+bug/1786910) - continuing anyway.");
 }
 $climate->lightGreen("OK!");
 
