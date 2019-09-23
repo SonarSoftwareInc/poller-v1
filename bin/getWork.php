@@ -64,7 +64,7 @@ function getWorkFromSonar():stdClass
     try {
         $result = $client->post(getenv("SONAR_URI") . "/api/poller", [
             'headers' => [
-                'Content-Type' => 'application/json; charset=UTF8',
+                'Content-Type' => 'application/json; charset=utf-8',
                 'timeout' => 30,
             ],
             'json' => [
