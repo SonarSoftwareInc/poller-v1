@@ -116,7 +116,7 @@ class DeviceMappingPoller
                 $pids[$pid] = $pid;
             }
         }
-        
+
         while (count($pids) > 0)
         {
             foreach ($pids as $pid)
@@ -205,7 +205,7 @@ class DeviceMappingPoller
                 $mapper = new MikroTik($device);
                 break;
             default:
-                $mapper = new GenericDeviceMapper($device);
+                $mapper = new GenericDeviceMapper($device, $hostWithDeviceType['type'] == 'network_sites');
                 break;
         }
 
