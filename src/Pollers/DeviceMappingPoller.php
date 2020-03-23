@@ -8,7 +8,6 @@ use Monolog\Logger;
 use SNMP;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumCanopyPMPAccessPointMapper;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumEpmpAccessPointMapper;
-use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumEpmp3kAccessPointMapper;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP250Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP500Backhaul;
 use SonarSoftware\Poller\DeviceMappers\Cambium\CambiumPTP600Backhaul;
@@ -54,7 +53,6 @@ class DeviceMappingPoller
      */
     public function poll(array $work):array
     {
-
         if (count($work['hosts']) === 0)
         {
             return [];
@@ -74,7 +72,7 @@ class DeviceMappingPoller
             $pid = pcntl_fork();
             if (!$pid)
             {
-               //Don't parse empty workloads
+                //Don't parse empty workloads
                 if (count($chunks[$i]) === 0)
                 {
                     exit();
@@ -91,11 +89,10 @@ class DeviceMappingPoller
                         $device = new Device();
                         $device->setId($hostWithDeviceType['id']);
                         $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
-                        
+
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
                         $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
                         $device = $mapper->mapDevice();
-			
                         array_push($devices, $device->toArray());
                     }
                     catch (Exception $e)
@@ -157,26 +154,14 @@ class DeviceMappingPoller
      */
     private function getDeviceMapper(array $hostWithDeviceType, Device $device)
     {
-       
         switch ($hostWithDeviceType['type_query_result'])
         {
             case "1.3.6.1.4.1.161.19.250.256":
                 $mapper = new CambiumCanopyPMPAccessPointMapper($device);
                 break;
-	    case "1.3.6.1.4.1.17713.21":
-	    case "1.3.6.1.4.1.17713.21.9.37":
-		$mapper = new CambiumEpmpAccessPointMapper($device); //EPMP3000 (FCC)
-		break;
-	    case "1.3.6.1.4.1.17713.21.9.40":
-                $mapper = new CambiumEpmpAccessPointMapper($device); //EPMP3000 (ROW/ETSI)
-                break;
-	    case "1.3.6.1.4.1.17713.21.9.43":
-                $mapper = new CambiumEpmpAccessPointMapper($device); //EPMP3000L (FCC)
-                break;
-	    case "1.3.6.1.4.1.17713.21.9.44":
-                $mapper = new CambiumEpmpAccessPointMapper($device); //EPMP3000L (ROW/ETSI)
-                break;
-	    case "1.3.6.1.4.1.17713.21.1.1.2":
+            case "1.3.6.1.4.1.17713.21":
+            case "1.3.6.1.4.1.17713.21.1.1.2":
+            case "1.3.6.1.4.1.17713.21.9.37" || "1.3.6.1.4.1.17713.21.9.40" || "1.3.6.1.4.1.17713.21.9.43" || "1.3.6.1.4.1.17713.21.9.44":
                 $mapper = new CambiumEpmpAccessPointMapper($device);
                 break;
             case "1.3.6.1.4.1.41112.1.4":
@@ -223,7 +208,7 @@ class DeviceMappingPoller
             default:
                 $mapper = new GenericDeviceMapper($device, $hostWithDeviceType['type'] == 'network_sites');
                 break;
-	}
+        }
 
         return $mapper;
     }
