@@ -12,10 +12,14 @@ class GenericDeviceMapper extends BaseDeviceMapper implements DeviceMapperInterf
     /**
      * GenericDeviceMapper constructor.
      * @param Device $device
+     * @param bool $isNetworkHost
      */
-    public function __construct(Device $device)
+    private $isNetworkHost = true;
+
+    public function __construct(Device $device, $isNetworkHost = true)
     {
         parent::__construct($device);
+        $this->isNetworkHost = $isNetworkHost;
     }
 
     /**
@@ -24,7 +28,18 @@ class GenericDeviceMapper extends BaseDeviceMapper implements DeviceMapperInterf
     public function mapDevice():Device
     {
         $this->setSystemMetadataOnDevice();
-        $deviceInterfaces = $this->getInterfacesWithStandardMibData();
+        if ($this->isNetworkHost === true) {
+            $deviceInterfaces = $this->getInterfacesWithStandardMibData();
+        } else {
+            $deviceInterfaces = $this->getInterfacesWithStandardMibData(
+                false,
+                false,
+                false,
+                false,
+                true,
+                true
+            );
+        }
         $this->device->setInterfaces($deviceInterfaces);
 
         return $this->device;

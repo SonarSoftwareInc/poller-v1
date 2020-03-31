@@ -80,7 +80,7 @@ class DetermineDeviceMapping
                 $client = new Client();
                 $client->post(getenv("SONAR_URI") . "/api/poller/device_mapping", [
                     'headers' => [
-                        'Content-Type' => 'application/json; charset=UTF8',
+                        'Content-Type' => 'application/json',
                         'timeout' => 120,
                     ],
                     'json' => [

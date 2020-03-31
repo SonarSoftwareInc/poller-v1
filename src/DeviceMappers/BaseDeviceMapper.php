@@ -87,7 +87,8 @@ abstract class BaseDeviceMapper
     ):array
     {
         try {
-            $interfacesIndexedByInterfaceID = $this->buildInitialInterfaceArray();
+            $baseData = $this->fetchBaseData();
+            $interfacesIndexedByInterfaceID = $this->buildInitialInterfaceArray($baseData);
         }
         catch (Exception $e)
         {
@@ -96,7 +97,7 @@ abstract class BaseDeviceMapper
         }
 
         try {
-            $interfacesIndexedByInterfaceID = $this->getInterfaceMacAddresses($interfacesIndexedByInterfaceID);
+            $interfacesIndexedByInterfaceID = $this->getInterfaceMacAddresses($interfacesIndexedByInterfaceID, $baseData);
         }
         catch (Exception $e)
         {
@@ -106,7 +107,7 @@ abstract class BaseDeviceMapper
             }
         }
         try {
-            $interfacesIndexedByInterfaceID = $this->getInterfaceStatus($interfacesIndexedByInterfaceID);
+            $interfacesIndexedByInterfaceID = $this->getInterfaceStatus($interfacesIndexedByInterfaceID, $baseData);
         }
         catch (Exception $e)
         {
@@ -174,7 +175,7 @@ abstract class BaseDeviceMapper
         if ($getSpeeds === true)
         {
             try {
-                $interfacesIndexedByInterfaceID = $this->getInterfaceSpeeds($interfacesIndexedByInterfaceID);
+                $interfacesIndexedByInterfaceID = $this->getInterfaceSpeeds($interfacesIndexedByInterfaceID, $baseData);
             }
             catch (Exception $e)
             {
@@ -223,49 +224,61 @@ abstract class BaseDeviceMapper
     }
 
     /**
+     * @return array|false
+     */
+    private function fetchBaseData()
+    {
+        return $this->snmp->walk('1.3.6.1.2.1.2.2.1');
+    }
+
+    /**
+     * @param array $baseData
      * @return array
      */
-    private function buildInitialInterfaceArray():array
+    private function buildInitialInterfaceArray(array $baseData):array
     {
-        $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.2");
         $interfaces = [];
-        foreach ($result as $key => $datum)
+        foreach ($baseData as $key => $datum)
         {
-            $boom = explode(".",$key);
-            $interfaces[$boom[count($boom)-1]] = [
-                'name' => $this->cleanSnmpResult($datum),
-                'status' => null,
-                'connected_l1' => [],
-                'connected_l2' => [],
-                'connected_l3' => [],
-                'ip_addresses' => [],
-                'mac_address' => null,
-                'speed_mbps' => null,
-                'speed_mbps_in' => null,
-                'speed_mbps_out' => null,
-                'type' => null,
-            ];
+            if (strpos($key, '1.3.6.1.2.1.2.2.1.2.') !== false) {
+                $boom = explode(".",$key);
+                $interfaces[$boom[count($boom)-1]] = [
+                    'name' => $this->cleanSnmpResult($datum),
+                    'status' => null,
+                    'connected_l1' => [],
+                    'connected_l2' => [],
+                    'connected_l3' => [],
+                    'ip_addresses' => [],
+                    'mac_address' => null,
+                    'speed_mbps' => null,
+                    'speed_mbps_in' => null,
+                    'speed_mbps_out' => null,
+                    'type' => null,
+                ];
+            }
         }
         return $interfaces;
     }
 
     /**
      * @param array $interfacesIndexedByInterfaceID
+     * @param array $baseData
      * @return array
      */
-    private function getInterfaceSpeeds(array $interfacesIndexedByInterfaceID):array
+    private function getInterfaceSpeeds(array $interfacesIndexedByInterfaceID, array $baseData):array
     {
-        $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.5");
-        foreach ($result as $key => $datum)
+        foreach ($baseData as $key => $datum)
         {
-            $key = ltrim($key,".");
-            $boom = explode(".", $key);
-            if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
-            {
-                $speed = $this->cleanSnmpResult($datum);
-                if (is_numeric($speed) && $speed > 0)
+            if (strpos($key, '1.3.6.1.2.1.2.2.1.5.') !== false) {
+                $key = ltrim($key,".");
+                $boom = explode(".", $key);
+                if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
                 {
-                    $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['speed_mbps'] = (int)ceil($speed/1000**2);
+                    $speed = $this->cleanSnmpResult($datum);
+                    if (is_numeric($speed) && $speed > 0)
+                    {
+                        $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['speed_mbps'] = (int)ceil($speed/1000**2);
+                    }
                 }
             }
         }
@@ -298,27 +311,29 @@ abstract class BaseDeviceMapper
 
     /**
      * @param array $interfacesIndexedByInterfaceID
+     * @param array $baseData
      * @return array
      */
-    private function getInterfaceMacAddresses(array $interfacesIndexedByInterfaceID):array
+    private function getInterfaceMacAddresses(array $interfacesIndexedByInterfaceID, array $baseData):array
     {
-        $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.6");
-        foreach ($result as $key => $datum)
+        foreach ($baseData as $key => $datum)
         {
-            $key = ltrim($key,".");
-            $boom = explode(".", $key);
-            if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
-            {
-                try {
-                    $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
-                    if ($this->validateMac($mac))
-                    {
-                        $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['mac_address'] = $mac;
-                    }
-                }
-                catch (Exception $e)
+            if (strpos($key, '1.3.6.1.2.1.2.2.1.6.') !== false) {
+                $key = ltrim($key,".");
+                $boom = explode(".", $key);
+                if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
                 {
-                    continue;
+                    try {
+                        $mac = Formatter::formatMac($this->cleanSnmpResult($datum));
+                        if ($this->validateMac($mac))
+                        {
+                            $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['mac_address'] = $mac;
+                        }
+                    }
+                    catch (Exception $e)
+                    {
+                        continue;
+                    }
                 }
             }
         }
@@ -363,46 +378,49 @@ abstract class BaseDeviceMapper
     private function getBridgingTable(array $interfacesIndexedByInterfaceID):array
     {
         $mappings = [];
+        $result = $this->snmp->walk("1.3.6.1.2.1.17.4.3.1");
 
-        $result = $this->snmp->walk("1.3.6.1.2.1.17.4.3.1.2");
         foreach ($result as $key => $datum)
         {
-            $datum = $this->cleanSnmpResult($datum);
-            if (!$datum)
-            {
-                continue;
+            if (strpos($key, '1.3.6.1.2.1.17.4.3.1.2.') !== false) {
+                $datum = $this->cleanSnmpResult($datum);
+                if (!$datum)
+                {
+                    continue;
+                }
+                $key = ltrim($key,".");
+                $boom = explode(".",$key,12);
+                $mappings[$boom[11]] = $datum;
             }
-            $key = ltrim($key,".");
-            $boom = explode(".",$key,12);
-            $mappings[$boom[11]] = $datum;
         }
 
-        $result = $this->snmp->walk("1.3.6.1.2.1.17.4.3.1.1");
         foreach ($result as $key => $datum)
         {
-            $datum = $this->cleanSnmpResult($datum);
-            if (!$datum)
-            {
-                continue;
-            }
-            try {
-                $macAddress = Formatter::formatMac($datum);
-                if ($this->validateMac($macAddress))
+            if (strpos($key, '1.3.6.1.2.1.17.4.3.1.1.') !== false) {
+                $datum = $this->cleanSnmpResult($datum);
+                if (!$datum)
                 {
-                    $key = ltrim($key,".");
-                    $boom = explode(".",$key,12);
-                    if (isset($mappings[$boom[11]]))
+                    continue;
+                }
+                try {
+                    $macAddress = Formatter::formatMac($datum);
+                    if ($this->validateMac($macAddress))
                     {
-                        if (isset($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]))
+                        $key = ltrim($key,".");
+                        $boom = explode(".",$key,12);
+                        if (isset($mappings[$boom[11]]))
                         {
-                            array_push($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]['connected_l2'],$macAddress);
+                            if (isset($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]))
+                            {
+                                array_push($interfacesIndexedByInterfaceID[$mappings[$boom[11]]]['connected_l2'],$macAddress);
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception $e)
-            {
-                continue;
+                catch (Exception $e)
+                {
+                    continue;
+                }
             }
         }
 
@@ -411,17 +429,19 @@ abstract class BaseDeviceMapper
 
     /**
      * @param array $interfacesIndexedByInterfaceID
+     * @param array $baseData
      * @return array
      */
-    private function getInterfaceStatus(array $interfacesIndexedByInterfaceID):array
+    private function getInterfaceStatus(array $interfacesIndexedByInterfaceID, array $baseData):array
     {
-        $result = $this->snmp->walk("1.3.6.1.2.1.2.2.1.8");
-        foreach ($result as $key => $datum)
+        foreach ($baseData as $key => $datum)
         {
-            $boom = explode(".",$key);
-            if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
-            {
-                $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['status'] = strpos($this->cleanSnmpResult($datum),"1") !== false ? true : false;
+            if (strpos($key, '1.3.6.1.2.1.2.2.1.8.') !== false) {
+                $boom = explode(".",$key);
+                if (isset($interfacesIndexedByInterfaceID[$boom[count($boom)-1]]))
+                {
+                    $interfacesIndexedByInterfaceID[$boom[count($boom)-1]]['status'] = strpos($this->cleanSnmpResult($datum),"1") !== false ? true : false;
+                }
             }
         }
         return $interfacesIndexedByInterfaceID;

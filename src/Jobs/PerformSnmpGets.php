@@ -50,7 +50,7 @@ class PerformSnmpGets
                 $client = new Client();
                 $client->post(getenv("SONAR_URI") . "/api/poller/snmp_gets", [
                     'headers' => [
-                        'Content-Type' => 'application/json; charset=UTF8',
+                        'Content-Type' => 'application/json',
                         'timeout' => 120,
                     ],
                     'json' => [

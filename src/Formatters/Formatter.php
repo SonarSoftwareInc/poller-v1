@@ -7,10 +7,6 @@ use stdClass;
 
 class Formatter
 {
-    //Types of hosts
-    const NETWORK_SITES = "network_sites";
-    const ACCOUNTS = "accounts";
-
     /**
      * Format the work from Sonar for SNMP queries into a usable format
      * @param stdClass $work
@@ -65,11 +61,6 @@ class Formatter
 
         foreach ($work->data->hosts as $hostID => $hostDetails)
         {
-            if ($hostDetails->type != $this::NETWORK_SITES)
-            {
-                continue;
-            }
-
             if (isset($formattedWork['templates'][$hostDetails->monitoring_template_id]))
             {
                 $formattedWork['hosts'][$hostID] = [
@@ -77,6 +68,7 @@ class Formatter
                     'template_id' => $hostDetails->monitoring_template_id,
                     'snmp_overrides' => $hostDetails->snmp_overrides,
                     'id' => $hostID,
+                    'type' => $hostDetails->type,
                 ];
             }
         }
@@ -109,7 +101,7 @@ class Formatter
 
 
         $icmpHosts = array_unique($icmpHosts);
-        
+
         return $icmpHosts;
     }
 
