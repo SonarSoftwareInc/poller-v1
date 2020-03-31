@@ -86,7 +86,7 @@ class DeviceMappingPoller
                 foreach ($myChunksWithDeviceType as $hostWithDeviceType)
                 {
                     try {
-						$rustart = getrusage();
+			$rustart = getrusage();
                         $device = new Device();
                         $device->setId($hostWithDeviceType['id']);
                         $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
@@ -95,16 +95,16 @@ class DeviceMappingPoller
                         $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
                         $device = $mapper->mapDevice;
 						
-						//figure out if we're running overtime to poll devices
-						$ruend = getrusage();
-						function rutime($ru, $rus, $index) {
-							return ($ru["ru_$index.tv_sec"]*1000 + intval($ru["ru_$index.tv_usec"]/1000))
-							 -  ($rus["ru_$index.tv_sec"]*1000 + intval($rus["ru_$index.tv_usec"]/1000));
-						}
-						$device->setTimer(rutime($ruend, $rustart, "utime"));
-						if($device->getTimer() > 2000){
-							$this->log->log("{$hostWithDeviceType['ip']} took longer than 2 seconds to poll",Logger::ERROR);
-						}
+			//figure out if we're running overtime to poll devices
+			$ruend = getrusage();
+			function rutime($ru, $rus, $index) {
+				return ($ru["ru_$index.tv_sec"]*1000 + intval($ru["ru_$index.tv_usec"]/1000))
+				 -  ($rus["ru_$index.tv_sec"]*1000 + intval($rus["ru_$index.tv_usec"]/1000));
+			}
+			$device->setTimer(rutime($ruend, $rustart, "utime"));
+			if($device->getTimer() > 2000){
+				$this->log->log("{$hostWithDeviceType['ip']} took longer than 2 seconds to poll",Logger::ERROR);
+			}
                         array_push($devices, $device->toArray());
                     }
                     catch (Exception $e)
