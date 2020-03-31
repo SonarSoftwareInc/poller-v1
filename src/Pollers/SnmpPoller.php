@@ -9,6 +9,7 @@ use SNMP;
 use SNMPException;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Services\SonarLogger;
+use SonarSoftware\Poller\Services\TemporaryVariables;
 
 class SnmpPoller
 {
@@ -154,6 +155,8 @@ class SnmpPoller
 
         foreach ($chunks as $host)
         {
+			$iper = $host['ip'];
+	        TemporaryVariables::add("SNMP tasks",$iper);
             $resultToWrite[$host['ip']] = [
                 'results' => [
                     'oids' => null,
@@ -249,8 +252,9 @@ class SnmpPoller
 			
 			if ($resultToWrite[$host['ip']]['timer'] > .5) {
 				//todo check debug env var
-					$this->log->log("{$hostWithDeviceType['ip']} took longer than .5 seconds to poll",Logger::INFO);
+					$this->log->log("{$hostWithDeviceType['ip']} took longer than .5 seconds to poll",Logger::WARNING);
 			}
+			TemporaryVariables::remove("SNMP tasks",$iper);
         }
 
         fwrite($handle, json_encode($resultToWrite));

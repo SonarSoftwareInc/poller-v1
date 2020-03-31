@@ -178,6 +178,7 @@ function queueSnmpWork(stdClass $contents, Carbon $now)
                 if (getenv('DEBUG') == "true")
                 {
                     $logger->log("Skipping SNMP polling, as it is still pending.",Logger::ERROR);
+					$logger->log("Waiting for: {print_r(TemporaryVariables::get("SNMP tasks"),1)}",Logger::ERROR);
                 }
                 $skipSnmpPolling = true;
             }
