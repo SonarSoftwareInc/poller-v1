@@ -244,17 +244,17 @@ class SnmpPoller
                     //Ignore, the device might not support 64bit counters
                 }
             }
-			$ruend = getrusage();
+	    $ruend = getrusage();
             //todo put this is a proper class
-			function rutime($ru, $rus, $index) {
-				return ($ru["ru_$index.tv_sec"]*1000 + intval($ru["ru_$index.tv_usec"]/1000))
-				 -  ($rus["ru_$index.tv_sec"]*1000 + intval($rus["ru_$index.tv_usec"]/1000));
-			}
-			$resultToWrite[$host['ip']]['timer'] = rutime($ruend, $rustart, "utime");
-			if ($resultToWrite[$host['ip']]['timer'] > 2000) {
-                //todo check debug env var
-				$this->log->log("{$hostWithDeviceType['ip']} took longer than 2 seconds to poll",Logger::ERROR);
-			}
+	    function rutime($ru, $rus, $index) {
+		return ($ru["ru_$index.tv_sec"]*1000 + intval($ru["ru_$index.tv_usec"]/1000))
+		 -  ($rus["ru_$index.tv_sec"]*1000 + intval($rus["ru_$index.tv_usec"]/1000));
+            }
+	    $resultToWrite[$host['ip']]['timer'] = rutime($ruend, $rustart, "utime");
+            if ($resultToWrite[$host['ip']]['timer'] > 2000) {
+	        //todo check debug env var
+            	$this->log->log("{$hostWithDeviceType['ip']} took longer than 2 seconds to poll",Logger::ERROR);
+	    }
         }
 
         fwrite($handle, json_encode($resultToWrite));
