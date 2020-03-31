@@ -99,8 +99,8 @@ class DeviceMappingPoller
 						$time_end = microtime(true); 
 						$device->setTimer($time_end-$time_start);
 						
-						if($device->getTimer() > .5){
-							$this->log->log("{$hostWithDeviceType['ip']} took longer than .5 seconds to poll",Logger::ERROR);
+						if($device->getTimer() > 5){
+							$this->log->log("{$hostWithDeviceType['ip']} took longer than 5 seconds to poll",Logger::ERROR);
 						}
                         array_push($devices, $device->toArray());
                     }
@@ -231,6 +231,8 @@ class DeviceMappingPoller
         $updatedChunks = [];
         foreach ($chunks as $host)
         {
+			///TODO Exit out for ICMP only devices, do not waste resources on them.
+			//if($templateDetails['snmp_community'] == "disabled") continue;
             $snmpObject = $this->buildSnmpObjectForHost($host);
             try {
                 $result = $snmpObject->get("1.3.6.1.2.1.1.2.0");

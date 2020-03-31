@@ -106,10 +106,10 @@ function queueDeviceMappingWork(stdClass $contents)
 {
     $climate = new CLImate();
     $formatter = new Formatter();
-
-    $work = $formatter->formatDeviceMappingWork($contents);
-    $token = Resque::enqueue('polling', 'SonarSoftware\Poller\Jobs\DetermineDeviceMapping', $work, true);
-    $climate->lightGreen("Enqueued device mapping job and got token $token");
+	
+	$work = $formatter->formatDeviceMappingWork($contents);
+	$token = Resque::enqueue('polling', 'SonarSoftware\Poller\Jobs\DetermineDeviceMapping', $work, true);
+	$climate->lightGreen("Enqueued device mapping job and got token $token");
 }
 
 /**
@@ -177,9 +177,7 @@ function queueSnmpWork(stdClass $contents, Carbon $now)
                 $climate->shout("Skipping SNMP polling, as it is still pending.");
                 if (getenv('DEBUG') == "true")
                 {
-					$remaining_IPs = TemporaryVariables::get("SNMP tasks",1);
                     $logger->log("Skipping SNMP polling, as it is still pending.",Logger::ERROR);
-					$logger->log("Waiting for: {print_r($remaining_IPs,true)}}",Logger::ERROR);
                 }
                 $skipSnmpPolling = true;
             }

@@ -9,7 +9,6 @@ use SNMP;
 use SNMPException;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Services\SonarLogger;
-use Predis\Client;
 
 class SnmpPoller
 {
@@ -18,7 +17,7 @@ class SnmpPoller
     protected $log;
     protected $retries;
     protected $templates;
-	protected $client;
+	
     /** Status constants */
     const GOOD = 2;
     const WARNING = 1;
@@ -32,7 +31,6 @@ class SnmpPoller
         $this->timeout = (int)getenv("SNMP_TIMEOUT") > 0 ? (int)getenv("SNMP_TIMEOUT")*1000000 : 500000;
         $this->retries = (int)getenv("SNMP_RETRIES");
         $this->log = new SonarLogger();
-		$this->client = new Client();
     }
 
     /**
@@ -75,7 +73,7 @@ class SnmpPoller
             }
         }
 
-
+		//$timeout_start = microtime(true); 
         while (count($pids) > 0)
         {
             foreach ($pids as $pid)
@@ -86,7 +84,15 @@ class SnmpPoller
                     unset($pids[$pid]);
                 }
             }
-
+			///TODO Get this validated and operational to kill rogue processes so they doesn't lock up the monitoring 
+			//$timeout_end = microtime(true);
+			//if($timeout_end-$timeout_start > 180){
+			//foreach ($pids as $pid)
+			//	{
+			//		posix_kill($pid,SIGKILL);
+			//	}
+				
+			//}
             sleep(1);
         }
 
@@ -146,6 +152,11 @@ class SnmpPoller
     private function pollDevices($chunks, $fileUniquePrefix, $counter)
     {
         $handle = fopen("/tmp/$fileUniquePrefix" . "_sonar_$counter","w");
+		//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
+		$output = fopen("/tmp/$fileUniquePrefix" . "_HOST_$counter","w");
+		fwrite($output, json_encode($chunks));
+		fclose($output);
+		
         if ($handle === false)
         {
             $this->log->log("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$counter",Logger::ERROR);
@@ -157,8 +168,6 @@ class SnmpPoller
 		
         foreach ($chunks as $host)
         {
-			$iper = $host['ip'];
-	        $client->hset("SNMP tasks",$iper,1);
             $resultToWrite[$host['ip']] = [
                 'results' => [
                     'oids' => null,
@@ -169,7 +178,8 @@ class SnmpPoller
                     'status_reason' => null,
                 ],
                 'time' => time(),
-				'timer' => 0.0,
+				//timer indicates how long(in real time) it took to complete the request for this single device.
+				'timer' => 0.0, ///TODO add timer field on the instance for readability and easy debugging. 
             ];
 			$time_start = microtime(true); 
             $templateDetails = $this->templates[$host['template_id']];
@@ -178,7 +188,11 @@ class SnmpPoller
             {
                 continue;
             }
-
+			
+			//Exit out for ICMP only devices, do not waste resources on them.
+			if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled"){
+				continue;
+			}
             $snmpVersion = isset($host['snmp_overrides']['snmp_version']) ? $host['snmp_overrides']['snmp_version'] : $templateDetails['snmp_version'];
 
             switch ($snmpVersion)
@@ -252,13 +266,15 @@ class SnmpPoller
 			$time_end = microtime(true); 
 			$resultToWrite[$host['ip']]['timer'] = $time_end-$time_start;
 			
-			if ($resultToWrite[$host['ip']]['timer'] > .5) {
+			if ($resultToWrite[$host['ip']]['timer'] > 20) {
 				//todo check debug env var
 				$this->log->log("{$host['ip']} took {$resultToWrite[$host['ip']]['timer']} seconds to poll",Logger::WARNING);
 			}
-			$client->hdel("SNMP tasks",$iper);
         }
-
+		//we delete the file, and so only the problem hosts that do not exit their process gracefully are left. 
+		unlink($output);
+		
+		
         fwrite($handle, json_encode($resultToWrite));
         fclose($handle);
     }
