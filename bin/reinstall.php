@@ -23,3 +23,17 @@ catch (RuntimeException $e)
     $climate->shout("FAILED!");
     return;
 }
+
+/**
+ * @param $command
+ * @return mixed
+ */
+function execCommand($command)
+{
+    exec($command,$output,$returnVar);
+    if ($returnVar !== 0)
+    {
+        throw new RuntimeException("Failed to execute $command");
+    }
+    return $output;
+}
