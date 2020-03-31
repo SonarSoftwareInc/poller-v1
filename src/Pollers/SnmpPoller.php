@@ -164,9 +164,9 @@ class SnmpPoller
                     'status_reason' => null,
                 ],
                 'time' => time(),
-				'timer' => 0,
+				'timer' => 0.0,
             ];
-			$rustart = getrusage();
+			$time_start = microtime(true); 
             $templateDetails = $this->templates[$host['template_id']];
 
             if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
@@ -244,17 +244,13 @@ class SnmpPoller
                     //Ignore, the device might not support 64bit counters
                 }
             }
-	    $ruend = getrusage();
-            //todo put this is a proper class
-	    function rutime($ru, $rus, $index) {
-		return ($ru["ru_$index.tv_sec"]*1000 + intval($ru["ru_$index.tv_usec"]/1000))
-		 -  ($rus["ru_$index.tv_sec"]*1000 + intval($rus["ru_$index.tv_usec"]/1000));
-            }
-	    $resultToWrite[$host['ip']]['timer'] = rutime($ruend, $rustart, "utime");
-            if ($resultToWrite[$host['ip']]['timer'] > 2000) {
-	        //todo check debug env var
-            	$this->log->log("{$hostWithDeviceType['ip']} took longer than 2 seconds to poll",Logger::ERROR);
-	    }
+			$time_end = microtime(true); 
+			$resultToWrite[$host['ip']]['timer'] = $time_end-$time_start;
+			
+			if ($resultToWrite[$host['ip']]['timer'] > .5) {
+				//todo check debug env var
+					$this->log->log("{$hostWithDeviceType['ip']} took longer than .5 seconds to poll",Logger::INFO);
+			}
         }
 
         fwrite($handle, json_encode($resultToWrite));

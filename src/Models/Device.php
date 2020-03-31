@@ -107,9 +107,9 @@ class Device
     }
 	
 	/**
-     * @param int $timer in ms
+     * @param float $timer in ms
      */
-	public function setTimer(int $timer)
+	public function setTimer(float $timer)
     {
         $this->timer = $timer;
     }
@@ -117,7 +117,7 @@ class Device
     /**
      * @return int timer in ms
      */
-    public function getTimer():int
+    public function getTimer():float
     {
         return $this->timer;
     }
