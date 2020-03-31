@@ -164,7 +164,7 @@ class SnmpPoller
                     'status_reason' => null,
                 ],
                 'time' => time(),
-				'timer' = 0,
+				'timer' => 0,
             ];
 			$rustart = getrusage();
             $templateDetails = $this->templates[$host['template_id']];
