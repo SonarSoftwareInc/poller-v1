@@ -9,7 +9,7 @@ use SNMP;
 use SNMPException;
 use SonarSoftware\Poller\Formatters\Formatter;
 use SonarSoftware\Poller\Services\SonarLogger;
-use SonarSoftware\Poller\Services\TemporaryVariables;
+use Predis\Client;
 
 class SnmpPoller
 {
@@ -18,12 +18,12 @@ class SnmpPoller
     protected $log;
     protected $retries;
     protected $templates;
-
+	protected $client;
     /** Status constants */
     const GOOD = 2;
     const WARNING = 1;
     const DOWN = 0;
-
+	
     public function __construct()
     {
         $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
@@ -32,6 +32,7 @@ class SnmpPoller
         $this->timeout = (int)getenv("SNMP_TIMEOUT") > 0 ? (int)getenv("SNMP_TIMEOUT")*1000000 : 500000;
         $this->retries = (int)getenv("SNMP_RETRIES");
         $this->log = new SonarLogger();
+		$this->client = new Client();
     }
 
     /**
@@ -152,11 +153,12 @@ class SnmpPoller
         }
 
         $resultToWrite = [];
-
+		
+		
         foreach ($chunks as $host)
         {
 			$iper = $host['ip'];
-	        TemporaryVariables::add("SNMP tasks",$iper);
+	        $client->hset("SNMP tasks",$iper,1);
             $resultToWrite[$host['ip']] = [
                 'results' => [
                     'oids' => null,
@@ -252,9 +254,9 @@ class SnmpPoller
 			
 			if ($resultToWrite[$host['ip']]['timer'] > .5) {
 				//todo check debug env var
-					$this->log->log("{$hostWithDeviceType['ip']} took longer than .5 seconds to poll",Logger::WARNING);
+				$this->log->log("{$host['ip']} took {$resultToWrite[$host['ip']]['timer']} seconds to poll",Logger::WARNING);
 			}
-			TemporaryVariables::remove("SNMP tasks",$iper);
+			$client->hdel("SNMP tasks",$iper);
         }
 
         fwrite($handle, json_encode($resultToWrite));
