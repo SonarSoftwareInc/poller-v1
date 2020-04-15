@@ -25,6 +25,28 @@ If you are using another distribution, you will need the following packages:
 * redis-server
 * monit
 
+--
+
+**Ubuntu 18.04 is not recommended, but in case you've crossed the rubicon and you're commited, follow the instructions below to get the poller working.** 
+
+Add the following lines to `/etc/apt/sources.list`
+
+`deb http://security.ubuntu.com/ubuntu xenial-security main universe`
+`deb http://security.ubuntu.com/ubuntu xenial-security main` 
+
+Then run 
+
+`apt-get update`
+`sudo apt-get install php7.0-cli php7.0-zip php7.0-snmp php7.0-sqlite3 php7.0-bcmath php7.0-mbstring php7.0-dom`
+
+If you have issues, try installing the older version of redis, as the predis library is reported to have issues with newer versions.
+
+`wget  http://security.ubuntu.com/ubuntu/pool/universe/r/redis/redis-server_3.0.6-1ubuntu0.4_amd64.deb`
+`dpkg -i redis-server_3.0.6-1ubuntu0.4_amd64.deb` 
+
+
+--
+
 Once the packages are installed, we can install the poller. First, download the latest poller code by typing `git clone https://github.com/SonarSoftware/poller.git`. This will clone the existing code into a directory named `poller`, enter it by typing `cd poller`. Now, navigate to the [releases](https://github.com/SonarSoftware/poller/releases) page and check what the latest tagged release is. You can also type
 `git describe --abbrev=0` to see the latest tag from the command line. Once you've found it, type `git checkout tags/{TAG}` where `{TAG}` is the latest tag found (e.g. `git checkout tags/1.0.3`). Now type `php install.php` and the installer will setup the poller itself.
 
