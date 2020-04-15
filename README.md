@@ -27,11 +27,12 @@ If you are using another distribution, you will need the following packages:
 
 --
 
-**Ubuntu 18.04 is not recommended, but in case you've crossed the rubicon and you're commited, follow the instructions below to get the poller working.** 
+**Ubuntu 18.04 is not recommended, but in case you've crossed the rubicon and you're committed, follow the instructions below to get the poller working.** 
 
 Add the following lines to `/etc/apt/sources.list`
 
 `deb http://security.ubuntu.com/ubuntu xenial-security main universe`
+
 `deb http://security.ubuntu.com/ubuntu xenial-security main` 
 
 Then run 
