@@ -29,6 +29,8 @@ If you are using another distribution, you will need the following packages:
 
 **Ubuntu 18.04 is not recommended, but in case you've crossed the rubicon and you're committed, follow the instructions below to get the poller working.** 
 
+Note: if you've already installed the newer flavour of these programs, you will need to remove them or start on a fresh image.
+
 Add the following lines to `/etc/apt/sources.list`
 
 `deb http://security.ubuntu.com/ubuntu xenial-security main universe`
