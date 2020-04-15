@@ -45,6 +45,7 @@ Then run
 If you have issues, try installing the older version of redis, as the predis library is reported to have issues with newer versions.
 
 `wget  http://security.ubuntu.com/ubuntu/pool/universe/r/redis/redis-server_3.0.6-1ubuntu0.4_amd64.deb`
+
 `dpkg -i redis-server_3.0.6-1ubuntu0.4_amd64.deb` 
 
 
