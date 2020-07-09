@@ -20,6 +20,7 @@ use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\MikroTik\MikroTik;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaAxAccessPoint;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaBxBackhaul;
+use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirFiber;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirMaxAccessPointMapper;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiIdentifier;
 use SonarSoftware\Poller\Models\Device;
@@ -167,7 +168,8 @@ class DeviceMappingPoller
             "1.3.6.1.4.1.17713.11" => "CAMBIUMPTP670",
             "1.3.6.1.4.1.17713.21" => "CAMBIUMEPMP",
             "1.3.6.1.4.1.17713.250" => "CAMBIUMPTP250",
-            "1.3.6.1.4.1.41112.1.4" => "UBNTAIRMAX",
+            "1.3.6.1.4.1.41112.1.3" => "UBNT",
+            "1.3.6.1.4.1.41112.1.4" => "UBNT",
             "1.3.6.1.4.1.43356.1.1.1" => "MIMOSABX",
             "1.3.6.1.4.1.43356.1.1.2" => "MIMOSABX",
             "1.3.6.1.4.1.43356.1.1.3" => "MIMOSAAX",
@@ -205,9 +207,6 @@ class DeviceMappingPoller
                 break;
             case "CAMBIUMEPMP":
                 $mapper = new CambiumEpmpAccessPointMapper($device);
-                break;
-            case "UBNTAIRMAX":
-                $mapper = new UbiquitiAirMaxAccessPointMapper($device);
                 break;
             case "CAMBIUMPTP650":
                 $mapper = new CambiumPTP650Backhaul($device);
