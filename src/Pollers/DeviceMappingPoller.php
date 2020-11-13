@@ -276,7 +276,7 @@ class DeviceMappingPoller
         foreach ($chunks as $host)
         {
             //Check to see if we have manually disabled snmp polling on our ICMP only devices
-			$templateDetails = $this->templates[$host['template_id']]
+			$templateDetails = $this->templates[$host['template_id']];
             if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community']) continue;
 			
             $snmpObject = $this->buildSnmpObjectForHost($host);
