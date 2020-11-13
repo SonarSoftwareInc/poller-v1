@@ -25,7 +25,6 @@ class TemporaryVariables
     {
         $client = new Client();
         return $client->set($key, $value);
-    
 	}
 	/**
      * @param $keyone

@@ -94,7 +94,7 @@ class DeviceMappingPoller
 
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
                         $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
-                        $device = $mapper->mapDevice;
+                        $device = $mapper->mapDevice();
 
                         //figure out if we're running overtime to poll devices
                         $time_end = microtime(true); 
@@ -277,7 +277,7 @@ class DeviceMappingPoller
         {
             //Check to see if we have manually disabled snmp polling on our ICMP only devices
 			$templateDetails = $this->templates[$host['template_id']];
-            if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community']) continue;
+            if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled" ) continue;
 			
             $snmpObject = $this->buildSnmpObjectForHost($host);
             try {

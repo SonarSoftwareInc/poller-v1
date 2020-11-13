@@ -17,12 +17,12 @@ class SnmpPoller
     protected $log;
     protected $retries;
     protected $templates;
-	
+
     /** Status constants */
     const GOOD = 2;
     const WARNING = 1;
     const DOWN = 0;
-	
+
     public function __construct()
     {
         $dotenv = new Dotenv(dirname(__FILE__) . "/../../");
@@ -73,7 +73,7 @@ class SnmpPoller
             }
         }
 
-		//$timeout_start = microtime(true); 
+        $timeout_start = microtime(true); 
         while (count($pids) > 0)
         {
             foreach ($pids as $pid)
@@ -84,15 +84,16 @@ class SnmpPoller
                     unset($pids[$pid]);
                 }
             }
-			///TODO Get this validated and operational to kill rogue processes so they doesn't lock up the monitoring 
-			//$timeout_end = microtime(true);
-			//if($timeout_end-$timeout_start > 180){
-			//foreach ($pids as $pid)
-			//	{
-			//		posix_kill($pid,SIGKILL);
-			//	}
+			///Get this validated and operational to kill rogue processes so they doesn't lock up the monitoring 
+			$timeout_end = microtime(true);
+			if($timeout_end-$timeout_start > 180){
+				foreach ($pids as $pid)
+				{
+					posix_kill($pid,SIGKILL);
+					unset($pids[$pid]);
+				}
 				
-			//}
+			}
             sleep(1);
         }
 
@@ -152,11 +153,13 @@ class SnmpPoller
     private function pollDevices($chunks, $fileUniquePrefix, $counter)
     {
         $handle = fopen("/tmp/$fileUniquePrefix" . "_sonar_$counter","w");
-		//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
-		$output = fopen("/tmp/$fileUniquePrefix" . "_HOST_$counter","w");
-		fwrite($output, json_encode($chunks));
-		fclose($output);
-		
+        if (getenv('DEBUG') == "true")
+        {
+			//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
+			$output = fopen("/tmp/$fileUniquePrefix" . "_HOST_$counter","w");
+			fwrite($output, json_encode($chunks));
+			fclose($output);
+        }
         if ($handle === false)
         {
             $this->log->log("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$counter",Logger::ERROR);
@@ -164,8 +167,6 @@ class SnmpPoller
         }
 
         $resultToWrite = [];
-		
-		
         foreach ($chunks as $host)
         {
             $resultToWrite[$host['ip']] = [
@@ -179,7 +180,7 @@ class SnmpPoller
                 ],
                 'time' => time(),
 				//timer indicates how long(in real time) it took to complete the request for this single device.
-				'timer' => 0.0, ///TODO add timer field on the instance for readability and easy debugging. 
+				'timer' => 0.0, ///TODO add timer field in the Sonar instance for readability and easy debugging. 
             ];
 			$time_start = microtime(true); 
             $templateDetails = $this->templates[$host['template_id']];
@@ -188,11 +189,11 @@ class SnmpPoller
             {
                 continue;
             }
-			
-			//Exit out for ICMP only devices, do not waste resources on them.
-			if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled"){
-				continue;
-			}
+
+            //Exit out for ICMP only devices, do not waste resources on them.
+            if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled"){
+            	continue;
+            }
             $snmpVersion = isset($host['snmp_overrides']['snmp_version']) ? $host['snmp_overrides']['snmp_version'] : $templateDetails['snmp_version'];
 
             switch ($snmpVersion)
@@ -263,18 +264,23 @@ class SnmpPoller
                     //Ignore, the device might not support 64bit counters
                 }
             }
-			$time_end = microtime(true); 
-			$resultToWrite[$host['ip']]['timer'] = $time_end-$time_start;
-			
-			if ($resultToWrite[$host['ip']]['timer'] > 20) {
-				//todo check debug env var
-				$this->log->log("{$host['ip']} took {$resultToWrite[$host['ip']]['timer']} seconds to poll",Logger::WARNING);
-			}
+            $time_end = microtime(true); 
+            $resultToWrite[$host['ip']]['timer'] = $time_end-$time_start;
+
+            if ($resultToWrite[$host['ip']]['timer'] > 20) {
+                if (getenv('DEBUG') == "true")
+                {
+                    $this->log->log("{$host['ip']} took {$resultToWrite[$host['ip']]['timer']} seconds to poll",Logger::WARNING);
+                }
+            }
         }
-		//we delete the file, and so only the problem hosts that do not exit their process gracefully are left. 
-		unlink($output);
 		
-		
+        //we delete the file, and so only the problem hosts that do not exit their process gracefully are left. 
+        if (getenv('DEBUG') == "true")
+        {
+		    unlink($output);
+        }
+        
         fwrite($handle, json_encode($resultToWrite));
         fclose($handle);
     }
