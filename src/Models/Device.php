@@ -11,7 +11,7 @@ class Device
     private $id;
     private $metadata = [];
     private $snmpObject;
-	private $timer;
+    private $timer;
 
     /**
      * @return array
@@ -21,7 +21,7 @@ class Device
         $structure = [
             'id' => $this->id,
             'metadata' => $this->metadata,
-			'timer' => $this->timer,
+            'timer' => $this->timer,
             'interfaces' => [],
         ];
 

@@ -87,7 +87,7 @@ class DeviceMappingPoller
                 foreach ($myChunksWithDeviceType as $hostWithDeviceType)
                 {
                     try {
-						$time_start = microtime(true);
+                        $time_start = microtime(true);
                         $device = new Device();
                         $device->setId($hostWithDeviceType['id']);
                         $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
@@ -95,15 +95,18 @@ class DeviceMappingPoller
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
                         $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
                         $device = $mapper->mapDevice;
-						
-						//figure out if we're running overtime to poll devices
-						$time_end = microtime(true); 
-						$device->setTimer($time_end-$time_start);
-						
-						if($device->getTimer() > 5){
-							$this->log->log("{$hostWithDeviceType['ip']} took longer than 5 seconds to poll",Logger::ERROR);
-						}
-                        array_push($devices, $device->toArray());
+                        
+						if (getenv('DEBUG') == "true")
+                        {
+                            //figure out if we're running overtime to poll devices
+                            $time_end = microtime(true); 
+                            $device->setTimer($time_end-$time_start);
+                        
+                            if($device->getTimer() > 5){
+                                $this->log->log("{$hostWithDeviceType['ip']} took longer than 5 seconds to poll",Logger::ERROR);
+                            }
+                            array_push($devices, $device->toArray());
+                        }
                     }
                     catch (Exception $e)
                     {
@@ -273,8 +276,10 @@ class DeviceMappingPoller
         $updatedChunks = [];
         foreach ($chunks as $host)
         {
-			///TODO Exit out for ICMP only devices, do not waste resources on them.
-			//if($templateDetails['snmp_community'] == "disabled") continue;
+            //Check to see if we have manually disabled snmp polling on our ICMP only devices
+			$templateDetails = $this->templates[$host['template_id']]
+            if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community']) continue;
+			
             $snmpObject = $this->buildSnmpObjectForHost($host);
             try {
                 $result = $snmpObject->get("1.3.6.1.2.1.1.2.0");
