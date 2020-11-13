@@ -95,18 +95,17 @@ class DeviceMappingPoller
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
                         $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
                         $device = $mapper->mapDevice;
-                        
-						if (getenv('DEBUG') == "true")
+
+                        //figure out if we're running overtime to poll devices
+                        $time_end = microtime(true); 
+                        $device->setTimer($time_end-$time_start);
+                        if (getenv('DEBUG') == "true")
                         {
-                            //figure out if we're running overtime to poll devices
-                            $time_end = microtime(true); 
-                            $device->setTimer($time_end-$time_start);
-                        
                             if($device->getTimer() > 5){
                                 $this->log->log("{$hostWithDeviceType['ip']} took longer than 5 seconds to poll",Logger::ERROR);
                             }
-                            array_push($devices, $device->toArray());
                         }
+                        array_push($devices, $device->toArray());
                     }
                     catch (Exception $e)
                     {
