@@ -20,6 +20,7 @@ use SonarSoftware\Poller\DeviceMappers\GenericDeviceMapper;
 use SonarSoftware\Poller\DeviceMappers\MikroTik\MikroTik;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaAxAccessPoint;
 use SonarSoftware\Poller\DeviceMappers\Mimosa\MimosaBxBackhaul;
+use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirFiber;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiAirMaxAccessPointMapper;
 use SonarSoftware\Poller\DeviceMappers\Ubiquiti\UbiquitiIdentifier;
 use SonarSoftware\Poller\Models\Device;
@@ -86,22 +87,24 @@ class DeviceMappingPoller
                 foreach ($myChunksWithDeviceType as $hostWithDeviceType)
                 {
                     try {
-						$time_start = microtime(true);
+                        $time_start = microtime(true);
                         $device = new Device();
                         $device->setId($hostWithDeviceType['id']);
                         $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
 
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
                         $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
-                        $device = $mapper->mapDevice;
-						
-						//figure out if we're running overtime to poll devices
-						$time_end = microtime(true); 
-						$device->setTimer($time_end-$time_start);
-						
-						if($device->getTimer() > 5){
-							$this->log->log("{$hostWithDeviceType['ip']} took longer than 5 seconds to poll",Logger::ERROR);
-						}
+                        $device = $mapper->mapDevice();
+
+                        //figure out if we're running overtime to poll devices
+                        $time_end = microtime(true); 
+                        $device->setTimer($time_end-$time_start);
+                        if (getenv('DEBUG') == "true")
+                        {
+                            if($device->getTimer() > 5){
+                                $this->log->log("{$hostWithDeviceType['ip']} took longer than 5 seconds to poll",Logger::ERROR);
+                            }
+                        }
                         array_push($devices, $device->toArray());
                     }
                     catch (Exception $e)
@@ -163,63 +166,104 @@ class DeviceMappingPoller
      */
     private function getDeviceMapper(array $hostWithDeviceType, Device $device)
     {
-        switch ($hostWithDeviceType['type_query_result'])
-        {
-            case "1.3.6.1.4.1.161.19.250.256":
+        $oidToMapper = [
+            "1.3.6.1.4.1.161" => "CANOPY",
+            "1.3.6.1.4.1.2736.1.1" => "ETHERWAN",
+            "1.3.6.1.4.1.10002.1" => "UBNT",
+            "1.3.6.1.4.1.14988.1" => "MIKROTIK",
+            "1.3.6.1.4.1.17713.5" => "CAMBIUMPTP500",
+            "1.3.6.1.4.1.17713.6" => "CAMBIUMPTP600",
+            "1.3.6.1.4.1.17713.7" => "CAMBIUMPTP650",
+            "1.3.6.1.4.1.17713.8" => "CAMBIUMPTP800",
+            "1.3.6.1.4.1.17713.9" => "CAMBIUMPTP700",
+            "1.3.6.1.4.1.17713.11" => "CAMBIUMPTP670",
+            "1.3.6.1.4.1.17713.21" => "CAMBIUMEPMP",
+            "1.3.6.1.4.1.17713.250" => "CAMBIUMPTP250",
+            "1.3.6.1.4.1.41112.1.3" => "UBNT",
+            "1.3.6.1.4.1.41112.1.4" => "UBNT",
+            "1.3.6.1.4.1.43356.1.1.1" => "MIMOSABX",
+            "1.3.6.1.4.1.43356.1.1.2" => "MIMOSABX",
+            "1.3.6.1.4.1.43356.1.1.3" => "MIMOSAAX",
+        ];
+
+        $longestOid = 0;
+        $m = "GENERIC";
+
+        foreach ($oidToMapper as $enumeration => $mapperName) {
+            if (strpos($hostWithDeviceType['type_query_result'], $enumeration) !== false) {
+                // initial state, found a match
+                if ($longestOid === 0) {
+                    $longestOid = strlen($enumeration);
+                    $m = $mapperName;
+		    
+                    if (getenv('DEBUG') == "true") {
+	   	                $this->log->log("initial state, ip: ".$hostWithDeviceType['ip'] . " enumeration is " . $enumeration . "... best mapper is: " . $m, Logger::DEBUG);
+                    }
+                }
+                // updated state, found a better match
+                if (strlen($enumeration) > $longestOid) {
+                    $longestOid = strlen($enumeration);
+                    $m = $mapperName;
+                    if (getenv('DEBUG') == "true") {
+                        $this->log->log("update state, ip: ".$hostWithDeviceType['ip'] . " enumeration is " . $enumeration . "... best mapper is: " . $m, Logger::DEBUG);
+                    }
+                }
+
+            }
+        }
+
+        switch ($m) {
+            case "CANOPY":
                 $mapper = new CambiumCanopyPMPAccessPointMapper($device);
                 break;
-            case "1.3.6.1.4.1.17713.21":
-            case "1.3.6.1.4.1.17713.21.1.1.2":
+            case "CAMBIUMEPMP":
                 $mapper = new CambiumEpmpAccessPointMapper($device);
                 break;
-            case "1.3.6.1.4.1.41112.1.4":
-                $mapper = new UbiquitiAirMaxAccessPointMapper($device);
-                break;
-            case "1.3.6.1.4.1.17713.7":
+            case "CAMBIUMPTP650":
                 $mapper = new CambiumPTP650Backhaul($device);
                 break;
-            case "1.3.6.1.4.1.17713.6":
+            case "CAMBIUMPTP600":
                 $mapper = new CambiumPTP600Backhaul($device);
                 break;
-            case "1.3.6.1.4.1.17713.250":
+            case "CAMBIUMPTP250":
                 $mapper = new CambiumPTP250Backhaul($device);
                 break;
-            case "1.3.6.1.4.1.17713.5":
+            case "CAMBIUMPTP500":
                 $mapper = new CambiumPTP500Backhaul($device);
                 break;
-            case "1.3.6.1.4.1.17713.11":
+            case "CAMBIUMPTP670":
                 $mapper = new CambiumPTP670Backhaul($device);
                 break;
-            case "1.3.6.1.4.1.17713.9":
+            case "CAMBIUMPTP700":
                 $mapper = new CambiumPTP700Backhaul($device);
                 break;
-            case "1.3.6.1.4.1.17713.8":
+            case "CAMBIUMPTP800":
                 $mapper = new CambiumPTP800Backhaul($device);
                 break;
-            case "1.3.6.1.4.1.10002.1":
+            case "UBNT":
                 $identifier = new UbiquitiIdentifier($device);
                 $mapper = $identifier->getMapper(); //Ubiquiti doesn't separate their devices well by sysObjectID. This identifier will attempt to determine the right device to return.
                 break;
-            case "1.3.6.1.4.1.43356.1.1.1": //B5, B5c, B11, B5-Lite (FW 1.4.5 and older)
-            case "1.3.6.1.4.1.43356.1.1.2": //B5-Lite
+            case "MIMOSABX":
                 $mapper = new MimosaBxBackhaul($device);
                 break;
-            case "1.3.6.1.4.1.43356.1.1.3": //A5-14, A5-18, A5c (FW 2.3+)
+            case "MIMOSAAX": //A5-14, A5-18, A5c (FW 2.3+)
                 $mapper = new MimosaAxAccessPoint($device);
                 break;
-            case "1.3.6.1.4.1.2736.1.1":
+            case "ETHERWAN":
                 $mapper = new EtherwanSwitch($device);
                 break;
-            case "1.3.6.1.4.1.14988.1":
+            case "MIKROTIK":
                 $mapper = new MikroTik($device);
                 break;
+            case "GENERIC":
             default:
                 $mapper = new GenericDeviceMapper($device, $hostWithDeviceType['type'] == 'network_sites');
                 break;
         }
 
         return $mapper;
-    }
+}
 
     /**
      * Determine the type of a device and return it to the caller for further processing
@@ -231,8 +275,10 @@ class DeviceMappingPoller
         $updatedChunks = [];
         foreach ($chunks as $host)
         {
-			///TODO Exit out for ICMP only devices, do not waste resources on them.
-			//if($templateDetails['snmp_community'] == "disabled") continue;
+            //Check to see if we have manually disabled snmp polling on our ICMP only devices
+			$templateDetails = $this->templates[$host['template_id']];
+            if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled" ) continue;
+			
             $snmpObject = $this->buildSnmpObjectForHost($host);
             try {
                 $result = $snmpObject->get("1.3.6.1.2.1.1.2.0");
