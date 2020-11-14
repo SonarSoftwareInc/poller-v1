@@ -50,6 +50,7 @@ class PerformSnmpGets
                 $logger->log("Uploading SNMP Results.",Logger::INFO);
             }
             try {
+				$logger->log("Uploading snmp to sonar", Logger::INFO);
                 $client = new Client();
                 $client->post(getenv("SONAR_URI") . "/api/poller/snmp_gets", [
                     'headers' => [

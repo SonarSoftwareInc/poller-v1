@@ -78,6 +78,7 @@ class DetermineDeviceMapping
 
             try {
                 $client = new Client();
+				$logger->log("Uploading device mapping to sonar", Logger::INFO);
                 $client->post(getenv("SONAR_URI") . "/api/poller/device_mapping", [
                     'headers' => [
                         'Content-Type' => 'application/json',

@@ -158,14 +158,14 @@ class SnmpPoller
      */
     private function pollDevices($chunks, $fileUniquePrefix, $counter)
     {
-        $handle = fopen("/tmp/".$fileUniquePrefix . "_sonar_" . $counter","w");
-//        if (getenv('DEBUG') == "true")
-  //      {
+        $handle = fopen("/tmp/".$fileUniquePrefix . "_sonar_" . $counter,"w");
+        if (getenv('DEBUG') == "true")
+        {
 			//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
 			$output = fopen("/tmp/".$fileUniquePrefix . "_HOST_" .$counter ,"w");
 			fwrite($output, json_encode($chunks));
 			fclose($output);
-    //    }
+        }
         if ($handle === false)
         {
             $this->log->log("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$counter",Logger::ERROR);
