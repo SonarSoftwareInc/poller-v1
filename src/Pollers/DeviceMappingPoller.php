@@ -101,8 +101,8 @@ class DeviceMappingPoller
                         $device->setTimer($time_end-$time_start);
                         if (getenv('DEBUG') == "true")
                         {
-                            if($device->getTimer() > 5){
-                                $this->log->log("{$hostWithDeviceType['ip']} took longer than 5 seconds to poll",Logger::ERROR);
+                            if($device->getTimer() > 25){
+                                $this->log->log("{$hostWithDeviceType['ip']} took longer than 25 seconds to poll",Logger::ERROR);
                             }
                         }
                         array_push($devices, $device->toArray());

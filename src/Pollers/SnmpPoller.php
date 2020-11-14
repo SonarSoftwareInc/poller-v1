@@ -87,20 +87,19 @@ class SnmpPoller
 			///Get this validated and operational to kill rogue processes so they doesn't lock up the monitoring 
 			$timeout_end = microtime(true);
 			if($timeout_end-$timeout_start > 180){
-				foreach ($pids as $pid)
-				{
-					posix_kill($pid,SIGKILL);
-					$this->log->log("Destrying PID" . $pid,Logger::INFO);
-					$res = pcntl_waitpid($pid, $status, WNOHANG);
+                foreach ($pids as $pid)
+                {
+                	posix_kill($pid,SIGKILL);
+                	$this->log->log("Destrying PID" . $pid,Logger::INFO);
+                	$res = pcntl_waitpid($pid, $status, WNOHANG);
 					if ($res == -1 || $res > 0)
-					{
-						unset($pids[$pid]);
-					}
-				}
-				
-			}
+                	{
+                		unset($pids[$pid]);
+                	}
+                }
+            }
 		$this->log->log("Total Pids remaining: ". count($pids),Logger::INFO);
-            sleep(1000);
+            sleep(1);
         }
 
         $files = glob("/tmp/$fileUniquePrefix*");
@@ -159,6 +158,7 @@ class SnmpPoller
     private function pollDevices($chunks, $fileUniquePrefix, $counter)
     {
         $handle = fopen("/tmp/".$fileUniquePrefix . "_sonar_" . $counter,"w");
+		$output = null;
         if (getenv('DEBUG') == "true")
         {
 			//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
