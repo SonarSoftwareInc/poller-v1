@@ -36,8 +36,9 @@ class DetermineDeviceMapping
             
 			
 			$currentMinutes = (microtime(true)/60);
-			$doWork = ((int)$currentMinutes)%$deviceMappingFrequency;
-			if ($doWork > 0)
+			$lastRun = TemporaryVariables::get("Last Device Mapping Run");
+			
+			if ($currentMinutes - $lastRun < (int)getenv("DEVICE_MAPPING_FREQUENCY") )
 			{
 				if (getenv('DEBUG') == "true")
 				{
@@ -52,6 +53,8 @@ class DetermineDeviceMapping
 					$logger->log("Last device mapping cycle was not less than $deviceMappingFrequency minutes ago, MAPPING for you.",Logger::INFO);	
 				}
 			}
+			
+			TemporaryVariables::set("Last Device Mapping Run",$currentMinutes);
 
             if (getenv('DEBUG') == "true")
             {

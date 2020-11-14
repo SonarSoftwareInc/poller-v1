@@ -196,6 +196,10 @@ class SnmpPoller
             {
                 continue;
             }
+			//Exit out for ICMP only devices, do not waste resources on them.
+            if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled"){
+            	continue;
+            }
 			
 			if (getenv('DEBUG') == "true")
 			{
@@ -204,10 +208,6 @@ class SnmpPoller
 				fclose($output);
 			}
 			
-            //Exit out for ICMP only devices, do not waste resources on them.
-            if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled"){
-            	continue;
-            }
             $snmpVersion = isset($host['snmp_overrides']['snmp_version']) ? $host['snmp_overrides']['snmp_version'] : $templateDetails['snmp_version'];
 
             switch ($snmpVersion)
