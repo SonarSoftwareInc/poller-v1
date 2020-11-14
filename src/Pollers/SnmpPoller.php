@@ -192,17 +192,18 @@ class SnmpPoller
             ];
 			$time_start = microtime(true); 
             $templateDetails = $this->templates[$host['template_id']];
+            if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
+            {
+                continue;
+            }
+			
 			if (getenv('DEBUG') == "true")
 			{
 				//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
 				$output = fopen("/tmp/".$fileUniquePrefix . "_HOST_" . $host['ip'] ,"w");
 				fclose($output);
 			}
-            if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
-            {
-                continue;
-            }
-
+			
             //Exit out for ICMP only devices, do not waste resources on them.
             if($templateDetails['snmp_community'] == "disabled" || $host['snmp_overrides']['snmp_community'] == "disabled"){
             	continue;

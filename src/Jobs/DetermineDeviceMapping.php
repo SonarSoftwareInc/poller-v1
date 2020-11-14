@@ -33,40 +33,30 @@ class DetermineDeviceMapping
             {
                 $deviceMappingFrequency = 5;
             }
-            $now = new Carbon("UTC");
-            $lastDeviceMappingRun = TemporaryVariables::get("Device Mapping Running");
-            if ($lastDeviceMappingRun != null)
-            {
-                try {
-                    $lastDeviceMappingRunCarbon = new Carbon($lastDeviceMappingRun, "UTC");
-                    if ($now->diffInMinutes($lastDeviceMappingRunCarbon) < $deviceMappingFrequency)
-                    {
-                        if (getenv('DEBUG') == "true")
-                        {
-                            $logger->log("Last device mapping cycle was less than $deviceMappingFrequency minutes ago, aborting.",Logger::INFO);
-                        }
-                        return;
-                    }
-					else
-					{
-						if (getenv('DEBUG') == "true")
-                        {
-							$logger->log("Last device mapping cycle was not less than $deviceMappingFrequency minutes ago, MAPPING for you.",Logger::INFO);	
-						}
-					}
-                }
-                catch (Exception $e)
-                {
-                    $logger->log("Could not instantiate Carbon from $lastDeviceMappingRun", Logger::ERROR);
-                }
-            }
+            
+			
+			$currentMinutes = (microtime(true)/60);
+			$doWork = ((int)$currentMinutes)%$deviceMappingFrequency;
+			if ($doWork > 0)
+			{
+				if (getenv('DEBUG') == "true")
+				{
+					$logger->log("Last device mapping cycle was less than $deviceMappingFrequency minutes ago, aborting.",Logger::INFO);
+				}
+				return;
+			}
+			else
+			{
+				if (getenv('DEBUG') == "true")
+				{
+					$logger->log("Last device mapping cycle was not less than $deviceMappingFrequency minutes ago, MAPPING for you.",Logger::INFO);	
+				}
+			}
 
             if (getenv('DEBUG') == "true")
             {
                 $logger->log("Starting device mapping cycle.",Logger::INFO);
             }
-
-            TemporaryVariables::set("Device Mapping Running", $now->toDateTimeString());
 
             $startTime = time();
 
