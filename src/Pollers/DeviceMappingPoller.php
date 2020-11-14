@@ -88,12 +88,18 @@ class DeviceMappingPoller
 
                 foreach ($myChunksWithDeviceType as $hostWithDeviceType)
                 {
+					$output = false;
                     try {
                         $time_start = microtime(true);
                         $device = new Device();
                         $device->setId($hostWithDeviceType['id']);
                         $device->setSnmpObject($this->buildSnmpObjectForHost($hostWithDeviceType));
-
+						if (getenv('DEBUG') == "true")
+						{
+							//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
+							$output = fopen("/tmp/".$fileUniquePrefix . "_MAPPER_HOST_" . $hostWithDeviceType['ip'] ,"w");
+							fclose($output);
+						}
                         //Additional 'case' statements can be added here to break out querying to a separate device mapper
                         $mapper = $this->getDeviceMapper($hostWithDeviceType, $device);
                         $device = $mapper->mapDevice();
@@ -117,6 +123,10 @@ class DeviceMappingPoller
                         }
                         continue;
                     }
+					if (getenv('DEBUG') == "true")
+					{
+						unlink("/tmp/".$fileUniquePrefix . "_MAPPER_HOST_" . $hostWithDeviceType['ip']);
+					}
                 }
 
                 fwrite($childFile,json_encode($devices));

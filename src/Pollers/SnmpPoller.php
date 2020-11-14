@@ -166,14 +166,8 @@ class SnmpPoller
     private function pollDevices($chunks, $fileUniquePrefix, $counter)
     {
         $handle = fopen("/tmp/".$fileUniquePrefix . "_sonar_" . $counter,"w");
-		$output = null;
-        if (getenv('DEBUG') == "true")
-        {
-			//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
-			$output = fopen("/tmp/".$fileUniquePrefix . "_HOST_" .$counter ,"w");
-			fwrite($output, json_encode($chunks));
-			fclose($output);
-        }
+		$output = false;
+        
         if ($handle === false)
         {
             $this->log->log("Failed to open handle for /tmp/$fileUniquePrefix" . "_sonar_$counter",Logger::ERROR);
@@ -198,7 +192,12 @@ class SnmpPoller
             ];
 			$time_start = microtime(true); 
             $templateDetails = $this->templates[$host['template_id']];
-
+			if (getenv('DEBUG') == "true")
+			{
+				//this allows a savvy user to be able to determine which threads are failing and can whittle down the hosts causing the problems
+				$output = fopen("/tmp/".$fileUniquePrefix . "_HOST_" . $host['ip'] ,"w");
+				fclose($output);
+			}
             if (count($templateDetails['oids']) === 0 && $templateDetails['collect_interface_statistics'] == false)
             {
                 continue;
@@ -287,13 +286,14 @@ class SnmpPoller
                     $this->log->log("{$host['ip']} took {$resultToWrite[$host['ip']]['timer']} seconds to poll",Logger::WARNING);
                 }
             }
+			
+			//we delete the file, and so only the problem hosts that do not exit their process gracefully are left. 
+			if (getenv('DEBUG') == "true")
+			{
+				unlink("/tmp/".$fileUniquePrefix . "_HOST_" . $host['ip']);
+			}
         }
 		
-        //we delete the file, and so only the problem hosts that do not exit their process gracefully are left. 
-        //if (getenv('DEBUG') == "true")
-        //{
-		    unlink($output);
-        //}
         
         fwrite($handle, json_encode($resultToWrite));
         fclose($handle);
