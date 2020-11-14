@@ -121,7 +121,6 @@ class DeviceMappingPoller
                         {
                             $this->log->log("Failed to get mappings from {$hostWithDeviceType['ip']}, got {$e->getMessage()}",Logger::ERROR);
                         }
-                        continue;
                     }
 					if (getenv('DEBUG') == "true")
 					{
