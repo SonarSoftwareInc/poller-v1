@@ -47,6 +47,13 @@ class DetermineDeviceMapping
                         }
                         return;
                     }
+					else
+					{
+						if (getenv('DEBUG') == "true")
+                        {
+							$logger->log("Last device mapping cycle was not less than $deviceMappingFrequency minutes ago, MAPPING for you.",Logger::INFO);	
+						}
+					}
                 }
                 catch (Exception $e)
                 {
@@ -75,7 +82,10 @@ class DetermineDeviceMapping
             }
 
             $timeTaken = time() - $startTime;
-
+			if (getenv('DEBUG') == "true")
+            {
+                $logger->log("Uploading device mapping Results.",Logger::INFO);
+            }
             try {
                 $client = new Client();
 				$logger->log("Uploading device mapping to sonar", Logger::INFO);

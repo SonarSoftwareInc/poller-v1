@@ -33,6 +33,7 @@ class DeviceMappingPoller
     private $log;
     private $retries;
     private $templates;
+	private $totalTimeout;
 
     /**
      * DeviceMappingPoller constructor.
@@ -44,6 +45,7 @@ class DeviceMappingPoller
         $this->snmpForks = (int)getenv("SNMP_FORKS") > 0 ? (int)getenv("SNMP_FORKS") : 25;
         $this->timeout = (int)getenv("SNMP_TIMEOUT") > 0 ? (int)getenv("SNMP_TIMEOUT")*1000000 : 500000;
         $this->retries = (int)getenv("SNMP_RETRIES");
+		$this->totalTimeout = (int)getenv("DEVICE_MAPPING_TIMEOUT") > 0 ? (int)getenv("DEVICE_MAPPING_TIMEOUT") * 60 : 300;
         $this->log = new SonarLogger();
     }
 
@@ -129,6 +131,7 @@ class DeviceMappingPoller
             }
         }
 
+		$timeout_start = microtime(true); 
         while (count($pids) > 0)
         {
             foreach ($pids as $pid)
@@ -139,7 +142,27 @@ class DeviceMappingPoller
                     unset($pids[$pid]);
                 }
             }
-
+			///Get this validated and operational to kill rogue processes so they doesn't lock up the monitoring 
+			$timeout_end = microtime(true);
+			if($timeout_end-$timeout_start > $this->totalTimeout){
+                foreach ($pids as $pid)
+                {
+                	posix_kill($pid,SIGKILL);
+                    if (getenv('DEBUG') == "true")
+                    {
+                        $this->log->log("Destrying PID" . $pid,Logger::INFO);
+                    }
+                	$res = pcntl_waitpid($pid, $status, WNOHANG);
+					if ($res == -1 || $res > 0)
+                	{
+                		unset($pids[$pid]);
+                	}
+                }
+            }
+            if (getenv('DEBUG') == "true")
+            {
+			    $this->log->log("Total Pids remaining: ". count($pids),Logger::INFO);
+            }
             sleep(1);
         }
 

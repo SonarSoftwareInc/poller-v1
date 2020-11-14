@@ -45,10 +45,11 @@ class PerformIcmpPolling
             }
 
             $timeTaken = time() - $startTime;
-
+            if (getenv('DEBUG') == "true")
+            {
+                $logger->log("Uploading ICMP Results.",Logger::INFO);
+            }
             try {
-				
-				$logger->log("Uploading icmp to sonar", Logger::INFO);
                 $client = new Client();
                 $client->post(getenv("SONAR_URI") . "/api/poller/icmp", [
                     'headers' => [

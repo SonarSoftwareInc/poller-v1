@@ -17,6 +17,7 @@ class SnmpPoller
     protected $log;
     protected $retries;
     protected $templates;
+	protected $totalTimeout;
 
     /** Status constants */
     const GOOD = 2;
@@ -30,6 +31,7 @@ class SnmpPoller
         $this->snmpForks = (int)getenv("SNMP_FORKS") > 0 ? (int)getenv("SNMP_FORKS") : 25;
         $this->timeout = (int)getenv("SNMP_TIMEOUT") > 0 ? (int)getenv("SNMP_TIMEOUT")*1000000 : 500000;
         $this->retries = (int)getenv("SNMP_RETRIES");
+		$this->totalTimeout = (int)getenv("SNMP_POLLING_TIMEOUT") > 0 ? (int)getenv("SNMP_POLLING_TIMEOUT") * 60 : 300;
         $this->log = new SonarLogger();
     }
 
@@ -86,11 +88,14 @@ class SnmpPoller
             }
 			///Get this validated and operational to kill rogue processes so they doesn't lock up the monitoring 
 			$timeout_end = microtime(true);
-			if($timeout_end-$timeout_start > 180){
+			if($timeout_end-$timeout_start > $this->totalTimeout){
                 foreach ($pids as $pid)
                 {
                 	posix_kill($pid,SIGKILL);
-                	$this->log->log("Destrying PID" . $pid,Logger::INFO);
+                    if (getenv('DEBUG') == "true")
+                    {
+                        $this->log->log("Destrying PID" . $pid,Logger::INFO);
+                    }
                 	$res = pcntl_waitpid($pid, $status, WNOHANG);
 					if ($res == -1 || $res > 0)
                 	{
@@ -98,7 +103,10 @@ class SnmpPoller
                 	}
                 }
             }
-		$this->log->log("Total Pids remaining: ". count($pids),Logger::INFO);
+            if (getenv('DEBUG') == "true")
+            {
+			    $this->log->log("Total Pids remaining: ". count($pids),Logger::INFO);
+            }
             sleep(1);
         }
 
