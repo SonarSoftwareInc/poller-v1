@@ -14,25 +14,25 @@ $latestVersion = $body[0]->name;
 if (version_compare($currentVersion, $latestVersion) === -1)
 {
     echo "There is a newer version, $latestVersion.\n";
-    exec("(cd /opt/poller; sudo -u sonarpoller git reset --hard origin/master)",$output,$returnVal);
+    exec("(cd /opt/poller; git reset --hard origin/master)",$output,$returnVal);
     if ($returnVal !== 0)
     {
         echo "There was an error updating to master.\n";
         return;
     }
-    exec("(cd /opt/poller; sudo -u sonarpoller git pull https://github.com/sonarsoftwareinc/poller-v1 master)",$output,$returnVal);
+    exec("(cd /opt/poller; git pull https://github.com/sonarsoftwareinc/poller-v1 master)",$output,$returnVal);
     if ($returnVal !== 0)
     {
         echo "There was an error updating to master.\n";
         return;
     }
-    exec("(cd /opt/poller; sudo -u sonarpoller git fetch --tags)",$output,$returnVal);
+    exec("(cd /opt/poller; git fetch --tags)",$output,$returnVal);
     if ($returnVal !== 0)
     {
         echo "There was an error updating to master.\n";
         return;
     }
-    exec("(cd /opt/poller; sudo -u sonarpoller git checkout tags/$latestVersion)",$output,$returnVal);
+    exec("(cd /opt/poller; git checkout tags/$latestVersion)",$output,$returnVal);
     if ($returnVal !== 0)
     {
         echo "There was an error checking out $latestVersion.\n";
