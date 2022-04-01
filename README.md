@@ -1,3 +1,7 @@
+# Deprecated
+
+This tool is deprecated, and should not be used with Sonar v2 instances. Please use the [v2 poller](https://github.com/SonarSoftwareInc/poller) instead.
+
 # Sonar Poller
 
 This poller is designed to collect network data and return it to your [Sonar](https://sonar.software) instance. You can deploy multiple pollers in a variety of locations to distribute polling, or to gather data from remote network locations.
